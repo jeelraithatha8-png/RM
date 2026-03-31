@@ -1,7 +1,11 @@
+"""
+User and Preference models for Nest & Found.
+"""
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.models.base import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -26,17 +30,17 @@ class Preference(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
     
-    # "Morning", "Night", "Evening"
+    # Values: "Morning", "Night", "Evening"
     sleep_pref = Column(String(50))
-    # "Light", "Heavy"
+    # Values: "Light Sleeper", "Heavy Sleeper"
     sleep_sense = Column(String(50))
-    # "Introvert", "Extrovert", "Ambivert"
+    # Values: "Introvert", "Extrovert", "Ambivert"
     personality = Column(String(50))
-    # "Organized", "Flexible", "Mixed"
+    # Values: "Organized", "Flexible", "Mixed"
     living_habit = Column(String(50))
-    # "Quiet", "Moderate", "Noisy"
+    # Values: "Quiet", "Moderate", "Noisy"
     noise_tolerance = Column(String(50))
-    # "No Guests", "Occasional", "Male Allowed"
+    # Values: "No Guests", "Occasional", "Male Allowed"
     guest_policy = Column(String(50))
 
     user = relationship("User", back_populates="preference")

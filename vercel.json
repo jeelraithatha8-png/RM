@@ -9,10 +9,6 @@
     {
       "src": "index2.html",
       "use": "@vercel/static"
-    },
-    {
-      "src": "edited.html",
-      "use": "@vercel/static"
     }
   ],
   "routes": [

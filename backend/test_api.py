@@ -1,8 +1,13 @@
+"""
+API Test Suite for Nest & Found Backend.
+Tests user registration, login, profile fetching, and match discovery.
+"""
 import requests
 import json
 import time
 
 BASE_URL = "http://localhost:8000/api/v1"
+
 
 def test_api():
     print("🚀 Starting API Test Suite for Nest & Found...")
@@ -51,9 +56,9 @@ def test_api():
     token = res_login.json().get("access_token")
     headers = {"Authorization": f"Bearer {token}"}
     
-    # 3. Test Profile Fetching
+    # 3. Test Profile Fetching (correct endpoint: /users/me)
     print("\n--- 3. Fetching User Profile ---")
-    res_me = requests.get(f"{BASE_URL}/auth/me", headers=headers)
+    res_me = requests.get(f"{BASE_URL}/users/me", headers=headers)
     print("Profile Fetch Status:", res_me.status_code)
     print("Profile Data:", list(res_me.json().keys()))
 
@@ -70,6 +75,7 @@ def test_api():
             print("Explanation:", matches[0]["explanation"])
 
     print("\n✅ API Test Suite completed.")
+
 
 if __name__ == "__main__":
     test_api()
