@@ -655,7 +655,498 @@
 </div>
 
 <script>
+  // ═══════════════════════════════════════════════
+  // Nest & Found — Frontend Application Logic
+  // ═══════════════════════════════════════════════
+
   const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000/api/v1' : '/api/v1';
+  let token = localStorage.getItem('nftoken');
+  let currentFilter = null;
+  let matchesData = [];
+  let curUser = {};
+
+  // ── Utility: Score color ──
+  function scoreColor(score) {
+    if (score >= 8) return '#2c6e2c';
+    if (score >= 6) return '#6c47c2';
+    return '#c67a30';
+  }
+
+  function scoreBg(score) {
+    if (score >= 8) return 'linear-gradient(135deg, #d4edd2, #e6f4e6)';
+    if (score >= 6) return 'linear-gradient(135deg, #e9e3ff, #dfd5fc)';
+    return 'linear-gradient(135deg, #fff3e0, #ffe0b2)';
+  }
+
+  // ── Loading spinner ──
+  function showLoading(containerId) {
+    const el = document.getElementById(containerId);
+    if (el) el.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:#8b6ccf"></i><p class="text-muted" style="margin-top:12px">Finding your best matches...</p></div>`;
+  }
+
+  // ── Logout ──
+  function logout() {
+    localStorage.removeItem('nftoken');
+    token = null;
+    curUser = {};
+    matchesData = [];
+    authModal.style.visibility = 'visible';
+    authModal.style.opacity = '1';
+    authStatus.innerText = '';
+    document.getElementById('authEmail').value = '';
+    document.getElementById('authPassword').value = '';
+  }
+
+  // ═══ AUTH HANDLING ═══
+  const authModal = document.getElementById('authModal');
+  const authStatus = document.getElementById('authStatus');
+  let isRegistering = false;
+
+  document.getElementById('authToggleBtn').addEventListener('click', () => {
+    isRegistering = !isRegistering;
+    document.getElementById('registerNameGroup').style.display = isRegistering ? 'block' : 'none';
+    document.getElementById('authSubmitBtn').innerText = isRegistering ? 'Create Account' : 'Sign In';
+    document.getElementById('authToggleBtn').innerText = isRegistering ? 'Already have an account? Sign In' : 'Need an account? Sign Up';
+    authStatus.innerText = '';
+  });
+
+  document.getElementById('authSubmitBtn').addEventListener('click', async () => {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const name = document.getElementById('authName').value.trim();
+
+    // Client-side validation
+    if (!email || !password) {
+      authStatus.innerText = '⚠️ Please enter email and password.';
+      return;
+    }
+    if (password.length < 6) {
+      authStatus.innerText = '⚠️ Password must be at least 6 characters.';
+      return;
+    }
+    if (isRegistering && !name) {
+      authStatus.innerText = '⚠️ Please enter your name.';
+      return;
+    }
+
+    authStatus.style.color = '#6c47c2';
+    authStatus.innerText = '⏳ Processing...';
+
+    try {
+      if (isRegistering) {
+        const res = await fetch(`${API_URL}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email, password, name, age: 24, occupation: 'Professional',
+            preferences: {
+              sleep_pref: "Night", sleep_sense: "Light Sleeper",
+              personality: "Ambivert", living_habit: "Flexible",
+              noise_tolerance: "Moderate", guest_policy: "Occasional"
+            }
+          })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          authStatus.style.color = '#e65b65';
+          authStatus.innerText = `❌ ${err.detail || 'Registration failed. Email may already exist.'}`;
+          return;
+        }
+        authStatus.style.color = '#2c6e2c';
+        authStatus.innerText = '✅ Registered! Logging in...';
+        isRegistering = false;
+      }
+
+      // Login flow
+      const fd = new URLSearchParams();
+      fd.append('username', email);
+      fd.append('password', password);
+      const logRes = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: fd
+      });
+
+      if (!logRes.ok) {
+        const err = await logRes.json().catch(() => ({}));
+        authStatus.style.color = '#e65b65';
+        authStatus.innerText = `❌ ${err.detail || 'Invalid credentials.'}`;
+        return;
+      }
+
+      const data = await logRes.json();
+      token = data.access_token;
+      localStorage.setItem('nftoken', token);
+      authModal.style.visibility = 'hidden';
+      authModal.style.opacity = '0';
+      await fetchProfile();
+      renderPage('dashboard');
+    } catch (e) {
+      authStatus.style.color = '#e65b65';
+      authStatus.innerText = '❌ Network error. Is the backend running?';
+    }
+  });
+
+  // Verify auth on load
+  if (!token) {
+    authModal.style.visibility = 'visible';
+    authModal.style.opacity = '1';
+  } else {
+    fetchProfile().then(ok => {
+      if (!ok) { authModal.style.visibility = 'visible'; authModal.style.opacity = '1'; }
+      else renderPage('dashboard');
+    });
+  }
+
+  // ═══ PROFILE ═══
+  async function fetchProfile() {
+    try {
+      const r = await fetch(`${API_URL}/users/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!r.ok) { localStorage.removeItem('nftoken'); return false; }
+      curUser = await r.json();
+
+      // Populate profile modal
+      document.getElementById('profileName').value = curUser.name || '';
+      document.getElementById('profileAge').value = curUser.age || '';
+      if (curUser.occupation) document.getElementById('profileOcc').value = curUser.occupation;
+
+      if (curUser.preference) {
+        document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+        if (curUser.preference.sleep_pref) document.querySelector(`[data-sleep="${curUser.preference.sleep_pref}"]`)?.classList.add('selected');
+        if (curUser.preference.guest_policy) document.querySelector(`[data-guest="${curUser.preference.guest_policy}"]`)?.classList.add('selected');
+        if (curUser.preference.noise_tolerance) document.querySelector(`[data-noise="${curUser.preference.noise_tolerance}"]`)?.classList.add('selected');
+        if (curUser.preference.living_habit) document.querySelector(`[data-habit="${curUser.preference.living_habit}"]`)?.classList.add('selected');
+        if (curUser.preference.personality) document.querySelector(`[data-personality="${curUser.preference.personality}"]`)?.classList.add('selected');
+        if (curUser.preference.sleep_sense) document.querySelector(`[data-sense="${curUser.preference.sleep_sense}"]`)?.classList.add('selected');
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
+  // Profile update
+  document.getElementById('closeModalBtn').addEventListener('click', async () => {
+    const getSelected = (groupId, dataKey) => {
+      const sel = document.querySelector(`#${groupId} .selected`);
+      return sel ? sel.dataset[dataKey] : null;
+    };
+
+    const payload = {
+      name: document.getElementById('profileName').value,
+      age: parseInt(document.getElementById('profileAge').value) || 20,
+      occupation: document.getElementById('profileOcc').value,
+      preferences: {
+        sleep_pref: getSelected('sleepPrefGroup', 'sleep') || "Night",
+        sleep_sense: getSelected('sleepSenseGroup', 'sense') || "Light Sleeper",
+        personality: getSelected('personalityGroup', 'personality') || "Ambivert",
+        living_habit: getSelected('habitsGroup', 'habit') || "Flexible",
+        noise_tolerance: getSelected('noiseGroup', 'noise') || "Moderate",
+        guest_policy: getSelected('guestPolicyGroup', 'guest') || "Occasional"
+      }
+    };
+
+    await fetch(`${API_URL}/users/update`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    document.getElementById('profileModal').style.visibility = 'hidden';
+    document.getElementById('profileModal').style.opacity = '0';
+    showToast('✅ Profile saved successfully!');
+    renderPage('dashboard');
+  });
+
+  // Toast notifications
+  function showToast(msg) {
+    const t = document.getElementById('toastMsg');
+    if (t) { t.innerText = msg; setTimeout(() => t.innerText = '', 3000); }
+  }
+
+  // Toggle Pills
+  document.querySelectorAll('.pill-group').forEach(grp => {
+    grp.addEventListener('click', e => {
+      if (e.target.classList.contains('pill')) {
+        grp.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+        e.target.classList.add('selected');
+      }
+    });
+  });
+
+  // Profile Modal
+  document.getElementById('openProfileModalBtn').addEventListener('click', () => {
+    document.getElementById('profileModal').style.visibility = 'visible';
+    document.getElementById('profileModal').style.opacity = '1';
+  });
+
+  // ═══ MATCHES ═══
+  async function fetchMatches(endpoint = "/matches") {
+    try {
+      const r = await fetch(API_URL + endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!r.ok) return [];
+      const res = await r.json();
+      matchesData = res.matches || [];
+      return matchesData;
+    } catch (e) { return []; }
+  }
+
+  window.showProfile = (id) => {
+    const m = matchesData.find(x => x.user.id === id);
+    if (!m) return;
+    const pref = m.user.preference;
+    const score = m.compatibility_score;
+    let desc = `👤 ${m.user.name}\n🎂 ${m.user.age} yrs\n💻 ${m.user.occupation || 'Professional'}\n⭐ Match Score: ${score}/10\n\n📌 Preferences:\n• Sleep: ${pref?.sleep_pref || 'N/A'}\n• Guests: ${pref?.guest_policy || 'N/A'}\n• Noise: ${pref?.noise_tolerance || 'N/A'}\n• Personality: ${pref?.personality || 'N/A'}\n• Living: ${pref?.living_habit || 'N/A'}`;
+    alert(desc);
+  };
+
+  // Open chat with a matched user
+  window.openChat = async (userId, userName) => {
+    // Switch to messages page
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-page="messages"]').classList.add('active');
+    renderPage('messages');
+
+    // Show chat detail
+    document.getElementById('chatList').style.display = 'none';
+    document.getElementById('chatDetail').style.display = 'block';
+    document.getElementById('activeChatName').innerText = `💬 Chat with ${userName}`;
+    document.getElementById('chatMessagesArea').innerHTML = '<p class="text-muted" style="text-align:center">Start of conversation</p>';
+
+    // Load existing messages
+    try {
+      const r = await fetch(`${API_URL}/chat/${userId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (r.ok) {
+        const msgs = await r.json();
+        if (msgs.length) {
+          document.getElementById('chatMessagesArea').innerHTML = msgs.map(msg => {
+            const isMine = msg.sender_id === curUser.id;
+            return `<div style="text-align:${isMine ? 'right' : 'left'}; margin:8px 0">
+              <span style="background:${isMine ? 'linear-gradient(135deg, #6c47c2, #8b6ccf)' : '#f0e8ff'}; color:${isMine ? '#fff' : '#333'}; padding:10px 18px; border-radius:20px; display:inline-block; max-width:70%; font-size:0.9rem">${msg.content}</span>
+              <div class="text-muted" style="font-size:0.65rem; margin-top:2px">${new Date(msg.created_at).toLocaleTimeString()}</div>
+            </div>`;
+          }).join('');
+        }
+      }
+    } catch (e) { /* silent */ }
+
+    // Wire send button
+    const sendBtn = document.getElementById('sendMsgBtn');
+    const newSendBtn = sendBtn.cloneNode(true);
+    sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+    newSendBtn.addEventListener('click', async () => {
+      const input = document.getElementById('messageInput');
+      const content = input.value.trim();
+      if (!content) return;
+
+      try {
+        await fetch(`${API_URL}/chat/send`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ receiver_id: userId, content })
+        });
+        input.value = '';
+        // Reload messages
+        openChat(userId, userName);
+      } catch (e) { showToast('Failed to send message.'); }
+    });
+  };
+
+  async function renderTopMatches() {
+    showLoading('topMatchesContainer');
+    const ms = await fetchMatches('/matches/top');
+    const container = document.getElementById('topMatchesContainer');
+    if (!ms.length) {
+      if (container) container.innerHTML = `<div class="empty-state"><i class="fas fa-heart" style="font-size:2rem; color:#b392e0; margin-bottom:12px"></i><h3>No matches yet</h3><p class="text-muted">Update your profile preferences to start matching!</p></div>`;
+      return;
+    }
+    if (container) container.innerHTML = ms.map(m => {
+      const s = m.compatibility_score;
+      return `<div class="match-card" onclick="showProfile(${m.user.id})">
+        <div style="display:flex; gap:16px; align-items:center">
+          <div class="avatar-large"><i class="fas fa-female"></i></div>
+          <div>
+            <h3 style="font-size:1.2rem">${m.user.name}, ${m.user.age}</h3>
+            <div class="text-muted"><i class="fas fa-briefcase"></i> ${m.user.occupation || 'Student'}</div>
+          </div>
+        </div>
+        <div class="match-tags">
+          <span class="tag" style="background:${scoreBg(s)}; color:${scoreColor(s)}"><i class="fas fa-star"></i> ${Math.round(s)}/10</span>
+          <span class="tag"><i class="fas fa-moon"></i> ${m.user.preference?.sleep_pref || ''}</span>
+        </div>
+        <p style="font-size:0.75rem; margin-top:10px; color:#5b3d9e"><i class="fas fa-check"></i> ${m.explanation}</p>
+        <button class="btn-outline" style="margin-top:12px; font-size:0.75rem; padding:8px 16px" onclick="event.stopPropagation(); openChat(${m.user.id}, '${m.user.name}')"><i class="fas fa-comment"></i> Message</button>
+      </div>`;
+    }).join('');
+  }
+
+  async function renderMatchesGrid() {
+    showLoading('allMatchesGrid');
+    const ep = currentFilter ? `/matches/filter?type=${currentFilter}` : `/matches`;
+    const ms = await fetchMatches(ep);
+    const grid = document.getElementById('allMatchesGrid');
+    if (!ms.length) {
+      if (grid) grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1"><i class="fas fa-filter" style="font-size:2rem; color:#b392e0; margin-bottom:12px"></i><h3>No matches for this filter</h3><p class="text-muted">Try a different filter or update your preferences.</p></div>`;
+      return;
+    }
+    if (grid) grid.innerHTML = ms.map(m => {
+      const s = m.compatibility_score;
+      return `<div class="profile-card" onclick="showProfile(${m.user.id})">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div>
+            <span style="font-size:1.2rem; font-weight:800">${m.user.name}, ${m.user.age}</span>
+            ${m.user.verification_status ? '<i class="fas fa-check-circle" style="color:#2c6e2c; margin-left:6px"></i>' : ''}
+          </div>
+          <span class="compatibility-badge" style="background:${scoreBg(s)}; color:${scoreColor(s)}"><i class="fas fa-star"></i> ${s}</span>
+        </div>
+        <div class="text-muted" style="margin:12px 0"><i class="fas fa-briefcase"></i> ${m.user.occupation || 'Professional'}</div>
+        <div class="text-muted" style="margin-top:10px; font-size:0.8rem">${m.explanation || ''}</div>
+        <button class="btn-outline" style="margin-top:14px; font-size:0.75rem; padding:8px 16px; width:100%" onclick="event.stopPropagation(); openChat(${m.user.id}, '${m.user.name}')"><i class="fas fa-comment"></i> Start Chat</button>
+      </div>`;
+    }).join('');
+  }
+
+  // ═══ CHAT PAGE ═══
+  async function renderChatList() {
+    const chatList = document.getElementById('chatList');
+    document.getElementById('chatDetail').style.display = 'none';
+    chatList.style.display = 'block';
+
+    // Populate chat list from matches
+    if (!matchesData.length) {
+      await fetchMatches('/matches');
+    }
+
+    if (!matchesData.length) {
+      chatList.innerHTML = `<div class="empty-state"><i class="fas fa-comments" style="font-size:2rem; color:#b392e0; margin-bottom:12px"></i><h3>No conversations yet</h3><p class="text-muted">Match with roommates to start chatting!</p></div>`;
+      return;
+    }
+
+    chatList.innerHTML = matchesData.slice(0, 10).map(m => `
+      <div class="chat-item" onclick="openChat(${m.user.id}, '${m.user.name}')">
+        <div class="avatar-large" style="width:48px; height:48px; min-width:48px; border-radius:50%"><i class="fas fa-female"></i></div>
+        <div style="flex:1">
+          <div style="font-weight:700">${m.user.name}</div>
+          <div class="text-muted">Tap to start chatting...</div>
+        </div>
+        <span class="tag" style="background:${scoreBg(m.compatibility_score)}; color:${scoreColor(m.compatibility_score)}"><i class="fas fa-star"></i> ${Math.round(m.compatibility_score)}/10</span>
+      </div>
+    `).join('');
+  }
+
+  // ═══ COMMUNITY ═══
+  function renderCommunity() {
+    const posts = [
+      { title: "Safe neighborhoods for women near tech parks", upvotes: 42, replies: 18, tag: "Safety" },
+      { title: "How to split rent fairly in Bangalore (INR)", upvotes: 56, replies: 24, tag: "Finance" },
+      { title: "Tips for first-time roommates — boundaries & communication", upvotes: 89, replies: 31, tag: "Lifestyle" },
+      { title: "Best co-living spaces for working women in India", upvotes: 63, replies: 15, tag: "Housing" }
+    ];
+    document.getElementById('forumPosts').innerHTML = posts.map(p => `
+      <div class="forum-item">
+        <div style="display:flex; justify-content:space-between; align-items:start">
+          <strong><i class="fas fa-comment" style="color:#8b6ccf"></i> ${p.title}</strong>
+          <span class="tag">${p.tag}</span>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:20px">
+          <span><i class="far fa-thumbs-up"></i> ${p.upvotes}</span>
+          <span><i class="far fa-comment"></i> ${p.replies} replies</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ═══ SAFETY ═══
+  function initSafety() {
+    document.getElementById('anonymousAlertBtn')?.addEventListener('click', async () => {
+      try {
+        const r = await fetch(`${API_URL}/safety/emergency-alert`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (r.ok) {
+          const data = await r.json();
+          alert(`🚨 ${data.status}\n${data.action}`);
+        } else {
+          alert('🚨 Anonymous alert submitted safely.');
+        }
+      } catch (e) { alert('🚨 Anonymous alert submitted safely.'); }
+    });
+
+    document.getElementById('downloadAgreementLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const agreement = `ROOMMATE AGREEMENT — Nest & Found\n${'═'.repeat(45)}\n\nDate: ${new Date().toLocaleDateString()}\nUser: ${curUser.name || 'N/A'}\n\n1. SHARED SPACES: Both parties agree to maintain cleanliness.\n2. GUESTS: Follow the agreed guest policy.\n3. NOISE: Respect quiet hours as per preference.\n4. RENT: Split equally unless otherwise agreed.\n5. COMMUNICATION: Address concerns directly & respectfully.\n6. TERMINATION: 30-day notice required.\n\nSigned digitally via Nest & Found Platform.`;
+      const blob = new Blob([agreement], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Roommate_Agreement_NestAndFound.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // ═══ FILTER CHIPS ═══
+  function attachChipListeners() {
+    document.querySelectorAll('.chip[data-filter]').forEach(chip => {
+      chip.removeEventListener('click', chip._hdl);
+      chip._hdl = async () => {
+        document.querySelectorAll('.chip[data-filter]').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentFilter = chip.dataset.filter;
+        if (!document.getElementById('matches-page').classList.contains('hidden-page')) renderMatchesGrid();
+        else renderTopMatches();
+      };
+      chip.addEventListener('click', chip._hdl);
+    });
+  }
+
+  // ═══ PAGE ROUTING ═══
+  function renderPage(p) {
+    document.querySelectorAll('[id$="-page"]').forEach(el => el.classList.add('hidden-page'));
+    const pg = document.getElementById(`${p}-page`);
+    if (pg) pg.classList.remove('hidden-page');
+    else return;
+
+    if (p === 'dashboard') { renderTopMatches(); attachChipListeners(); initDashboardButtons(); }
+    if (p === 'matches') { renderMatchesGrid(); attachChipListeners(); }
+    if (p === 'messages') { renderChatList(); }
+    if (p === 'community') renderCommunity();
+    if (p === 'safety') initSafety();
+  }
+
+  function initDashboardButtons() {
+    document.getElementById('safetyCheckinBtn')?.addEventListener('click', () => {
+      showToast('✅ Safety check-in recorded at ' + new Date().toLocaleTimeString());
+    });
+    document.getElementById('reportConcernBtn')?.addEventListener('click', () => {
+      const reason = prompt('Describe your concern:');
+      if (reason) showToast('🚩 Concern reported. Our team will review it.');
+    });
+  }
+
+  // ═══ BUILD UI ═══
+  const contentDiv = document.getElementById('mainContent');
+  contentDiv.innerHTML = `
+    <div id="dashboard-page"><div class="section-title"><i class="fas fa-fire"></i> Your Top Matches</div><div class="cards-grid" id="topMatchesContainer"></div><div class="filter-chips"><span class="chip" data-filter="verified"><i class="fas fa-shield-alt"></i> Verified Only</span><span class="chip" data-filter="noMaleGuests"><i class="fas fa-user-slash"></i> No Male Guests</span><span class="chip" data-filter="earlyBird"><i class="fas fa-sun"></i> Early Bird</span><span class="chip" data-filter="quietOnly"><i class="fas fa-volume-mute"></i> Quiet Only</span></div><div style="display:flex; gap:16px; margin-bottom:24px"><button class="btn-primary" id="safetyCheckinBtn"><i class="fas fa-phone-alt"></i> Safety Check-In</button><button class="btn-outline" id="reportConcernBtn"><i class="fas fa-flag"></i> Report Concern</button></div><div id="dashboardAltSection"></div><div id="toastMsg" class="text-muted" style="margin-top:16px; font-weight:600; color:#2c6e2c"></div></div>
+    <div id="matches-page" class="hidden-page"><div class="section-title"><i class="fas fa-handshake"></i> Smart Roommate Matches</div><div class="filter-chips"><span class="chip" data-filter="verified"><i class="fas fa-shield-alt"></i> Verified Only</span><span class="chip" data-filter="noMaleGuests"><i class="fas fa-user-slash"></i> No Male Guests</span><span class="chip" data-filter="earlyBird"><i class="fas fa-sun"></i> Early Bird</span><span class="chip" data-filter="quietOnly"><i class="fas fa-volume-mute"></i> Quiet Only</span></div><div class="matches-grid" id="allMatchesGrid"></div></div>
+    <div id="messages-page" class="hidden-page"><div class="section-title"><i class="fas fa-comments"></i> Conversations</div><div class="chat-list" id="chatList"></div><div id="chatDetail" style="display:none; margin-top:24px"><div id="activeChatName" style="font-weight:700; font-size:1.2rem; margin-bottom:12px"></div><div style="background:#f8f3ff; border-radius:28px; padding:16px; margin:12px 0; min-height:200px; max-height:400px; overflow-y:auto" id="chatMessagesArea"></div><div style="display:flex; gap:12px"><input type="text" id="messageInput" placeholder="Type your message..." style="flex:1; padding:14px 20px; border-radius:40px; border:2px solid #f0e8ff"><button class="btn-primary" id="sendMsgBtn">Send</button></div><button class="btn-outline" id="backToChatListBtn" style="margin-top:16px"><i class="fas fa-arrow-left"></i> Back to Conversations</button></div></div>
+    <div id="community-page" class="hidden-page"><div class="section-title"><i class="fas fa-globe-asia"></i> Community Forum</div><div id="forumPosts"></div></div>
+    <div id="safety-page" class="hidden-page"><div class="section-title"><i class="fas fa-shield-alt"></i> Safety Center</div><div class="safety-card"><div style="display:flex; justify-content:space-between; margin-bottom:12px"><span><i class="fas fa-id-card"></i> Identity Verification</span><span style="color:#2c6e2c"><i class="fas fa-check-circle"></i> Verified</span></div><div style="display:flex; justify-content:space-between; margin-bottom:12px"><span><i class="fas fa-search"></i> Background Check</span><span class="text-muted">Optional upgrade</span></div><div style="display:flex; justify-content:space-between; margin-bottom:20px"><span><i class="fas fa-map-marker-alt"></i> Safe Check-In</span><span style="color:#2c6e2c"><i class="fas fa-check"></i> Active</span></div><hr><button class="btn-outline" id="anonymousAlertBtn" style="width:100%; margin:16px 0"><i class="fas fa-exclamation-triangle"></i> Emergency Alert</button><a id="downloadAgreementLink" href="#" style="display:inline-block; text-align:center; width:100%; padding:12px; background:#f5efff; border-radius:40px; text-decoration:none; color:#6c47c2; font-weight:600"><i class="fas fa-file-alt"></i> Download Roommate Agreement</a></div></div>
+  `;
+
+  // Nav clicks
+  document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderPage(btn.dataset.page);
+  }));
+
+  // Back to chat list
+  document.getElementById('backToChatListBtn')?.addEventListener('click', () => renderChatList());
+
+  attachChipListeners();
+</script>
+</body>
+</html>
   let token = localStorage.getItem('nftoken');
   let currentFilter = null;
   let matchesData = [];

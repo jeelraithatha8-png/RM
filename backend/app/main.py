@@ -1,3 +1,10 @@
+"""
+Nest & Found Backend — FastAPI Application Entry Point.
+
+A women-only roommate matching system with hybrid AI recommendation engine.
+This module initializes the FastAPI app, configures CORS, registers
+all route modules, and manages the database lifecycle.
+"""
 import sys
 import os
 
@@ -21,38 +28,64 @@ from app.routes.matches import router as match_router
 from app.routes.chat import router as chat_router
 from app.routes.safety import router as safety_router
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB (Create tables if they don't exist)
+    """
+    Application lifecycle manager.
+    Creates database tables on startup and disposes the engine on shutdown.
+    """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
-    # Cleanup logic if any
     await engine.dispose()
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version="1.0.0",
-    description="Backend API for Nest & Found: A Women-Only Roommate Matching System",
-    lifespan=lifespan
+    description=(
+        "Backend API for **Nest & Found**: A Women-Only Roommate Matching System.\n\n"
+        "Features:\n"
+        "- 🤖 Hybrid Rule-Based + ML (Cosine Similarity) matching engine\n"
+        "- 🔐 JWT authentication with bcrypt password hashing\n"
+        "- 🛡️ Safety reporting and identity verification\n"
+        "- 💬 Real-time messaging between matched users\n"
+    ),
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# CORS setup for the frontend
+# CORS — allow frontend origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this to the frontend domains
+    allow_origins=["*"],  # In production, restrict to frontend domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include Routers
+# Register route modules
 app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["Auth"])
 app.include_router(user_router, prefix=f"{settings.API_V1_STR}/users", tags=["Users"])
 app.include_router(match_router, prefix=f"{settings.API_V1_STR}/matches", tags=["Matches"])
 app.include_router(chat_router, prefix=f"{settings.API_V1_STR}/chat", tags=["Chat"])
 app.include_router(safety_router, prefix=f"{settings.API_V1_STR}/safety", tags=["Safety"])
 
-@app.get("/")
+
+@app.get("/", tags=["Health"])
 def read_root():
-    return {"message": f"Welcome to {settings.PROJECT_NAME} API. Visit /docs for documentation."}
+    """Root endpoint — API health check."""
+    return {
+        "status": "healthy",
+        "project": settings.PROJECT_NAME,
+        "version": "1.0.0",
+        "docs": "/docs",
+    }
+
+
+@app.get("/health", tags=["Health"])
+def health_check():
+    """Health check endpoint for monitoring and deployment verification."""
+    return {"status": "ok"}
