@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Nest & Found | Premium Women-Only Roommate Matching</title>
+  <!-- Font Awesome 6 Pro (free icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <!-- AOS Animation Library -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(145deg, #fef9f4 0%, #fdf4f8 100%);
+      color: #2d2a3e;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f3ecfc; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #b392e0, #8b6ccf); border-radius: 10px; }
+
+    /* Animations */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 5px rgba(108, 71, 194, 0.2); }
+      50% { box-shadow: 0 0 20px rgba(108, 71, 194, 0.4); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .app-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Premium Header */
+    .header {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(139, 108, 207, 0.15);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.02);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      background: linear-gradient(135deg, #8b6ccf, #6c47c2);
+      width: 44px;
+      height: 44px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 8px 20px rgba(108, 71, 194, 0.3);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .logo-icon i { font-size: 1.5rem; }
+
+    .logo-text {
+      font-weight: 800;
+      font-size: 1.7rem;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #5e3c9e, #9b7bdf);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .logo-tagline {
+      font-size: 0.7rem;
+      color: #9b8ab5;
+      margin-left: 4px;
+      font-weight: 500;
+    }
+
+    .badge-verified {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #e6f4e6, #d4edd2);
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #2a6b2a;
+      border: 1px solid rgba(70, 130, 70, 0.2);
+      backdrop-filter: blur(4px);
+    }
+
+    .badge-verified i { font-size: 1rem; color: #3c9e3c; }
+
+    .profile-icon {
+      background: linear-gradient(135deg, #f5efff, #e8defc);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6c47c2;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      border: 2px solid white;
+      box-shadow: 0 6px 16px rgba(108, 71, 194, 0.2);
+    }
+
+    .profile-icon:hover {
+      transform: scale(1.05) rotate(5deg);
+      background: linear-gradient(135deg, #e8dcff, #dacdff);
+    }
+
+    /* Sidebar - Elegant Glassmorphism */
+    .main-layout { display: flex; flex: 1; }
+    .sidebar {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      width: 96px;
+      border-right: 1px solid rgba(139, 108, 207, 0.2);
+      padding: 40px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+      position: sticky;
+      top: 80px;
+      height: calc(100vh - 80px);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #9a87b9;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      padding: 12px 0;
+      transition: all 0.3s;
+      border-radius: 24px;
+      position: relative;
+    }
+
+    .nav-item i { font-size: 1.6rem; transition: all 0.3s; }
+
+    .nav-item:hover {
+      color: #6c47c2;
+      background: rgba(108, 71, 194, 0.08);
+    }
+
+    .nav-item:hover i { transform: translateY(-3px) scale(1.05); }
+
+    .nav-item.active {
+      color: #6c47c2;
+      background: linear-gradient(135deg, rgba(108, 71, 194, 0.12), rgba(139, 108, 207, 0.08));
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 20%;
+      height: 60%;
+      width: 3px;
+      background: linear-gradient(135deg, #6c47c2, #b392e0);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .content {
+      flex: 1;
+      padding: 32px 40px;
+      overflow-y: auto;
+      max-width: 100%;
+    }
+
+    /* Cards & Components */
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #4a3a6e, #7a5cae);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-block;
+    }
+
+    .cards-grid {
+      display: flex;
+      gap: 24px;
+      overflow-x: auto;
+      padding-bottom: 20px;
+      margin-bottom: 32px;
+      scrollbar-width: thin;
+    }
+
+    .match-card {
+      min-width: 280px;
+      background: white;
+      border-radius: 32px;
+      padding: 20px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(190, 160, 230, 0.3);
+      transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      cursor: pointer;
+    }
+
+    .match-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 24px 48px rgba(108, 71, 194, 0.12);
+      border-color: #cbb8f0;
+    }
+
+    .avatar-large {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #e8defc, #d9caff);
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #6c47c2;
+    }
+
+    .match-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      background: linear-gradient(135deg, #f5f0fe, #ede5ff);
+      padding: 5px 12px;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #6c47c2;
+    }
+
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 28px 0 32px 0;
+    }
+
+    .chip {
+      background: white;
+      border: 1.5px solid #e5d9fc;
+      padding: 10px 22px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #5e4a82;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chip i { font-size: 0.9rem; }
+
+    .chip:hover {
+      border-color: #b392e0;
+      background: #faf7ff;
+      transform: translateY(-2px);
+    }
+
+    .chip.active {
+      background: linear-gradient(135deg, #6c47c2, #8b6ccf);
+      border-color: #6c47c2;
+      color: white;
+      box-shadow: 0 8px 18px rgba(108, 71, 194, 0.3);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6c47c2, #8b6ccf);
+      border: none;
+      padding: 12px 28px;
+      border-radius: 50px;
+      color: white;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 6px 16px rgba(108, 71, 194, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(108, 71, 194, 0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid #d9caff;
+      padding: 12px 28px;
+      border-radius: 50px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #6c47c2;
+    }
+
+    .btn-outline:hover {
+      background: #f5efff;
+      border-color: #b392e0;
+      transform: translateY(-2px);
+    }
+
+    .matches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 28px;
+      margin-top: 20px;
+    }
+
+    .profile-card {
+      background: white;
+      border-radius: 32px;
+      padding: 22px;
+      border: 1px solid rgba(190, 160, 230, 0.25);
+      transition: all 0.4s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #6c47c2, #b392e0, #e0d4ff);
+      transform: scaleX(0);
+      transition: transform 0.4s;
+    }
+
+    .profile-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .profile-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(108, 71, 194, 0.1);
+      border-color: #d9caff;
+    }
+
+    .compatibility-badge {
+      background: linear-gradient(135deg, #e9e3ff, #dfd5fc);
+      border-radius: 40px;
+      padding: 5px 14px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #5b3d9e;
+    }
+
+    /* Alternative Section */
+    .alternative-section {
+      background: linear-gradient(135deg, #fffaf0, #fff6e8);
+      border-radius: 40px;
+      padding: 28px;
+      margin-top: 40px;
+      border: 1px solid #ffebcd;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    }
+
+    .room-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .room-card {
+      background: white;
+      border-radius: 28px;
+      padding: 20px;
+      flex: 1;
+      min-width: 200px;
+      border: 1px solid #ffe0b5;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .room-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+    }
+
+    .room-price {
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: #c9772e;
+      margin: 12px 0;
+    }
+
+    /* Modal */
+    .modal-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: 0.25s;
+    }
+
+    .modal-card {
+      background: white;
+      max-width: 620px;
+      width: 90%;
+      border-radius: 48px;
+      padding: 32px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.2);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #8b6ccf;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 28px;
+      border: 2px solid #f0e8ff;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #b392e0;
+      box-shadow: 0 0 0 3px rgba(108, 71, 194, 0.1);
+    }
+
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .pill {
+      background: #f5f0fe;
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pill.selected {
+      background: linear-gradient(135deg, #6c47c2, #8b6ccf);
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .chat-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: white;
+      border-radius: 28px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+
+    .chat-item:hover {
+      background: #faf7ff;
+      transform: translateX(5px);
+    }
+
+    .forum-item {
+      background: white;
+      border-radius: 28px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: all 0.2s;
+    }
+
+    .forum-item:hover {
+      transform: translateX(5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .safety-card {
+      background: white;
+      border-radius: 32px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .hidden-page {
+      display: none;
+    }
+
+    .text-muted {
+      color: #a594c4;
+      font-size: 0.8rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px;
+      background: linear-gradient(135deg, #fef9f4, #fff5f0);
+      border-radius: 48px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 80px; }
+      .content { padding: 20px; }
+      .logo-text { font-size: 1.2rem; }
+      .section-title { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo-icon"><i class="fas fa-female"></i></div>
+      <div>
+        <span class="logo-text">nest&found</span>
+        <div class="logo-tagline">sisterhood living</div>
+      </div>
+    </div>
+    <div class="badge-verified">
+      <i class="fas fa-check-circle"></i>
+      <span>Verified Identity</span>
+      <i class="fas fa-shield-alt"></i>
+    </div>
+    <div class="profile-icon" id="openProfileModalBtn">
+      <i class="fas fa-user-astronaut fa-lg"></i>
+    </div>
+  </div>
+  <div class="main-layout">
+    <div class="sidebar">
+      <button class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>Home</span></button>
+      <button class="nav-item" data-page="matches"><i class="fas fa-handshake"></i><span>Matches</span></button>
+      <button class="nav-item" data-page="messages"><i class="fas fa-comment-dots"></i><span>Chat</span></button>
+      <button class="nav-item" data-page="community"><i class="fas fa-globe-asia"></i><span>Connect</span></button>
+      <button class="nav-item" data-page="safety"><i class="fas fa-heart-shield"></i><span>Safety</span></button>
+    </div>
+    <div class="content" id="mainContent"></div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div id="profileModal" class="modal-bg">
+  <div class="modal-card">
+    <h2 style="margin-bottom: 24px;"><i class="fas fa-user-circle"></i> Your Profile</h2>
+    <div class="form-group"><label><i class="fas fa-user"></i> Name</label><input id="profileName" value="Aarohi"></div>
+    <div class="form-group"><label><i class="fas fa-calendar"></i> Age</label><input id="profileAge" value="26"></div>
+    <div class="form-group"><label><i class="fas fa-briefcase"></i> Occupation</label><select id="profileOcc"><option>Developer</option><option>Nurse</option><option>Engineer</option><option>Designer</option><option>Supporting Staff</option></select></div>
+    <div class="form-group"><label><i class="fas fa-moon"></i> Sleep Preference</label><div class="pill-group" id="sleepPrefGroup"><span class="pill" data-sleep="Morning">🌅 Morning</span><span class="pill" data-sleep="Evening">🌆 Evening</span><span class="pill" data-sleep="Night">🌙 Night</span></div></div>
+    <div class="form-group"><label><i class="fas fa-bed"></i> Sleep Sensitivity</label><div class="pill-group" id="sleepSenseGroup"><span class="pill" data-sense="Light Sleeper">😴 Light Sleeper</span><span class="pill" data-sense="Heavy Sleeper">💤 Heavy Sleeper</span></div></div>
+    <div class="form-group"><label><i class="fas fa-smile"></i> Personality</label><div class="pill-group" id="personalityGroup"><span class="pill" data-personality="Extrovert">🎉 Extrovert</span><span class="pill" data-personality="Introvert">📖 Introvert</span></div></div>
+    <div class="form-group"><label><i class="fas fa-home"></i> Living Habits</label><div class="pill-group" id="habitsGroup"><span class="pill" data-habit="Organized">📦 Organized</span><span class="pill" data-habit="Flexible">🌀 Flexible</span><span class="pill" data-habit="Mixed">⚖️ Mixed</span></div></div>
+    <div class="form-group"><label><i class="fas fa-volume-down"></i> Noise Tolerance</label><div class="pill-group" id="noiseGroup"><span class="pill" data-noise="Quiet">🔇 Quiet Only</span><span class="pill" data-noise="Noisy">🔊 OK with Noise</span></div></div>
+    <div class="form-group"><label><i class="fas fa-user-friends"></i> Guest Policy</label><div class="pill-group" id="guestPolicyGroup"><span class="pill" data-guest="No Guests">🚫 No Guests</span><span class="pill" data-guest="Occasional">👥 Occasional</span><span class="pill" data-guest="Male Allowed">🚹 Male Allowed</span></div></div>
+    <button class="btn-primary" id="verifyIdUploadBtn" style="width:100%;"><i class="fas fa-id-card"></i> Verify Government ID</button>
+    <button class="btn-outline" id="closeModalBtn" style="width:100%; margin-top: 16px;">Save Changes</button>
+  </div>
+</div>
+
+<!-- Auth Modal -->
+<div id="authModal" class="modal-bg" style="z-index: 2000;">
+  <div class="modal-card">
+    <h2 style="margin-bottom: 24px; text-align: center;"><i class="fas fa-lock"></i> Nest & Found</h2>
+    <p class="text-muted" style="text-align: center; margin-bottom: 20px;">Secure women-only network</p>
+    <div id="authStatus" style="color: #e65b65; margin-bottom: 12px; font-weight: 600; font-size: 0.85rem; text-align: center;"></div>
+    
+    <div class="form-group" id="registerNameGroup" style="display:none;">
+      <label><i class="fas fa-user"></i> Full Name</label>
+      <input id="authName" placeholder="E.g., Priya" value="">
+    </div>
+    
+    <div class="form-group">
+      <label><i class="fas fa-envelope"></i> Email Address</label>
+      <input type="email" id="authEmail" placeholder="you@domain.com" value="testuser@example.com">
+    </div>
+    
+    <div class="form-group">
+      <label><i class="fas fa-key"></i> Password</label>
+      <input type="password" id="authPassword" placeholder="Minimum 6 characters" value="password123">
+    </div>
+
+    <button class="btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center;">Sign In</button>
+    <button class="btn-outline" id="authToggleBtn" style="width:100%; margin-top: 16px; border:none;  justify-content:center;">Need an account? Sign Up</button>
+  </div>
+</div>
+
+<script>
+  const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000/api/v1' : '/api/v1';
+  let token = localStorage.getItem('nftoken');
+  let currentFilter = null;
+  let matchesData = [];
+  let curUser = {};
+
+  // Auth Handling
+  const authModal = document.getElementById('authModal');
+  const authStatus = document.getElementById('authStatus');
+  let isRegistering = false;
+
+  document.getElementById('authToggleBtn').addEventListener('click', () => {
+    isRegistering = !isRegistering;
+    document.getElementById('registerNameGroup').style.display = isRegistering ? 'block' : 'none';
+    document.getElementById('authSubmitBtn').innerText = isRegistering ? 'Create Account' : 'Sign In';
+    document.getElementById('authToggleBtn').innerText = isRegistering ? 'Already have an account? Sign In' : 'Need an account? Sign Up';
+  });
+
+  document.getElementById('authSubmitBtn').addEventListener('click', async () => {
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPassword').value;
+    const name = document.getElementById('authName').value;
+    
+    authStatus.innerText = 'Processing...';
+
+    if(isRegistering) {
+      const res = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name, age: 24, occupation: 'Professional', preferences: { sleep_pref: "Night", sleep_sense: "Light Sleeper", personality: "Ambivert", living_habit: "Flexible", noise_tolerance: "Moderate", guest_policy: "Occasional" } })
+      });
+      if(!res.ok) return authStatus.innerText = "Registration failed! User may exist.";
+      authStatus.innerText = "Registered successfully! Logging in...";
+      isRegistering = false;
+    }
+    
+    // Login flow
+    const fd = new URLSearchParams();
+    fd.append('username', email);
+    fd.append('password', password);
+    const logRes = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: fd
+    });
+    
+    if(!logRes.ok) return authStatus.innerText = "Invalid credentials.";
+    const data = await logRes.json();
+    token = data.access_token;
+    localStorage.setItem('nftoken', token);
+    authModal.style.visibility = 'hidden';
+    authModal.style.opacity = '0';
+    await fetchProfile();
+    renderPage('dashboard');
+  });
+
+  // Verify auth immediately
+  if(!token) {
+    authModal.style.visibility = 'visible';
+    authModal.style.opacity = '1';
+  } else {
+    fetchProfile().then(ok => {
+      if(!ok) { authModal.style.visibility='visible'; authModal.style.opacity='1'; }
+      else renderPage('dashboard');
+    });
+  }
+
+  // Profile
+  async function fetchProfile() {
+    try {
+      const r = await fetch(`${API_URL}/users/me`, { headers: {'Authorization': `Bearer ${token}`}});
+      if(!r.ok) { localStorage.removeItem('nftoken'); return false; }
+      curUser = await r.json();
+      
+      // Load into modal
+      document.getElementById('profileName').value = curUser.name || '';
+      document.getElementById('profileAge').value = curUser.age || '';
+      if(curUser.occupation) document.getElementById('profileOcc').value = curUser.occupation;
+      
+      if(curUser.preference) {
+        document.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));
+        if(curUser.preference.sleep_pref) document.querySelector(`[data-sleep="${curUser.preference.sleep_pref}"]`)?.classList.add('selected');
+        if(curUser.preference.guest_policy) document.querySelector(`[data-guest="${curUser.preference.guest_policy}"]`)?.classList.add('selected');
+        if(curUser.preference.noise_tolerance) document.querySelector(`[data-noise="${curUser.preference.noise_tolerance}"]`)?.classList.add('selected');
+        if(curUser.preference.living_habit) document.querySelector(`[data-habit="${curUser.preference.living_habit}"]`)?.classList.add('selected');
+        if(curUser.preference.personality) document.querySelector(`[data-personality="${curUser.preference.personality}"]`)?.classList.add('selected');
+        if(curUser.preference.sleep_sense) document.querySelector(`[data-sense="${curUser.preference.sleep_sense}"]`)?.classList.add('selected');
+      }
+      return true;
+    } catch(e) { return false; }
+  }
+
+  // API Call to Update Profile
+  document.getElementById('closeModalBtn').addEventListener('click', async () => {
+    // Collect Pill Values
+    const getSel = (q) => document.querySelector(q)?.dataset.sleep || document.querySelector(q)?.dataset.guest || document.querySelector(q)?.dataset.noise || document.querySelector(q)?.dataset.sense || document.querySelector(q)?.dataset.personality || document.querySelector(q)?.dataset.habit;
+    
+    const payload = {
+      name: document.getElementById('profileName').value,
+      age: parseInt(document.getElementById('profileAge').value) || 20,
+      occupation: document.getElementById('profileOcc').value,
+      preferences: {
+        sleep_pref: getSel('#sleepPrefGroup .selected') || "Night",
+        sleep_sense: getSel('#sleepSenseGroup .selected') || "Light Sleeper",
+        personality: getSel('#personalityGroup .selected') || "Ambivert",
+        living_habit: getSel('#habitsGroup .selected') || "Flexible",
+        noise_tolerance: getSel('#noiseGroup .selected') || "Moderate",
+        guest_policy: getSel('#guestPolicyGroup .selected') || "Occasional"
+      }
+    };
+    
+    await fetch(`${API_URL}/users/update`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    document.getElementById('profileModal').style.visibility='hidden';
+    document.getElementById('profileModal').style.opacity='0';
+    alert('Profile saved to cloud!');
+    renderPage('dashboard');
+  });
+
+  // Toggle Pills
+  document.querySelectorAll('.pill-group').forEach(grp => {
+    grp.addEventListener('click', e => {
+      if(e.target.classList.contains('pill')) {
+        grp.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));
+        e.target.classList.add('selected');
+      }
+    });
+  });
+
+  // Profile Modal logic
+  document.getElementById('openProfileModalBtn').addEventListener('click',()=>{ document.getElementById('profileModal').style.visibility='visible'; document.getElementById('profileModal').style.opacity='1'; });
+
+  // Render logic mapping
+  async function fetchMatches(endpoint = "/matches") {
+    try {
+      const r = await fetch(API_URL + endpoint, { headers: {'Authorization': `Bearer ${token}`} });
+      if(!r.ok) return [];
+      const res = await r.json();
+      matchesData = res.matches || [];
+      return matchesData;
+    } catch(e) { return []; }
+  }
+
+  window.showProfile = (id) => {
+    const m = matchesData.find(x=>x.user.id===id);
+    if(!m) return;
+    const pref = m.user.preference;
+    let desc = `👤 ${m.user.name}\n🎂 ${m.user.age} yrs\n💻 ${m.user.occupation || 'Professional'}\n💼 Match Score: ${m.compatibilityScore}/10\n\n📌 Settings:\n• ${pref.sleep_pref}\n• ${pref.guest_policy}\n• ${pref.noise_tolerance}`;
+    alert(desc);
+  };
+
+  async function renderTopMatches() {
+    const ms = await fetchMatches('/matches/top');
+    const container = document.getElementById('topMatchesContainer');
+    if(!ms.length) {
+      if(container) container.innerHTML = `<div class="empty-state">No users in DB yet. Update profile first!</div>`;
+      return;
+    }
+    if(container) container.innerHTML = ms.map(m => `<div class="match-card" onclick="showProfile(${m.user.id})"><div style="display:flex; gap:16px; align-items:center"><div class="avatar-large"><i class="fas fa-female"></i></div><div><h3 style="font-size:1.2rem">${m.user.name}, ${m.user.age}</h3><div class="text-muted"><i class="fas fa-briefcase"></i> ${m.user.occupation||'Student'}</div></div></div><div class="match-tags"><span class="tag"><i class="fas fa-moon"></i> ${window.Math.round(m.compatibilityScore)}/10</span><span class="tag"><i class="fas fa-heart"></i> ${m.user.preference?.sleep_pref || ''}</span></div><p style="font-size:0.75rem; margin-top:10px; color:#5b3d9e"><i class="fas fa-check"></i> ${m.explanation}</p></div>`).join('');
+  }
+
+  async function renderMatchesGrid() {
+    const ep = currentFilter ? `/matches/filter?type=${currentFilter}` : `/matches`;
+    const ms = await fetchMatches(ep);
+    const grid = document.getElementById('allMatchesGrid');
+    if(!ms.length) {
+       if(grid) grid.innerHTML = `<div class="empty-state">No specific matches fit this criteria.</div>`; return;
+    }
+    if(grid) grid.innerHTML = ms.map(m => `<div class="profile-card" onclick="showProfile(${m.user.id})"><div style="display:flex; justify-content:space-between; align-items:center"><div><span style="font-size:1.2rem; font-weight:800">${m.user.name}, ${m.user.age}</span> ${m.user.verification_status ? '<i class="fas fa-badge-check" style="color:#2c6e2c"></i>' : ''}</div><span class="compatibility-badge"><i class="fas fa-star"></i> ${m.compatibilityScore}</span></div><div class="text-muted" style="margin:12px 0"><i class="fas fa-briefcase"></i> ${m.user.occupation||'Professional'}</div><div class="text-muted" style="margin-top:10px">${m.explanation||''}</div></div>`).join('');
+  }
+
+  function renderCommunity() {
+    const posts = [{ title:"Safe neighborhoods for women near tech parks", upvotes:42, replies:18 },{ title:"How to split rent fairly in Bangalore (INR)", upvotes:56, replies:24 }];
+    document.getElementById('forumPosts').innerHTML = posts.map(p => `<div class="forum-item"><div style="display:flex; justify-content:space-between"><strong><i class="fas fa-comment"></i> ${p.title}</strong></div><div style="margin-top:12px; display:flex; gap:20px"><span><i class="far fa-thumbs-up"></i> ${p.upvotes}</span><span><i class="far fa-comment"></i> ${p.replies} replies</span></div></div>`).join('');
+  }
+
+  function initSafety() { document.getElementById('anonymousAlertBtn')?.addEventListener('click',()=>alert('🚨 Anonymous report submitted safely.')); }
+
+  function attachChipListeners() { 
+    document.querySelectorAll('.chip[data-filter]').forEach(chip=>{ 
+       chip.removeEventListener('click', chip._hdl); 
+       chip._hdl = async ()=>{ 
+         document.querySelectorAll('.chip[data-filter]').forEach(c=>c.classList.remove('active')); 
+         chip.classList.add('active'); 
+         currentFilter = chip.dataset.filter; 
+         if(!document.getElementById('matches-page').classList.contains('hidden-page')) renderMatchesGrid(); 
+         else renderTopMatches(); 
+       }; 
+       chip.addEventListener('click', chip._hdl); 
+    }); 
+  }
+
+  function renderPage(p) {
+    document.querySelectorAll('[id$="-page"]').forEach(el=>el.classList.add('hidden-page'));
+    const pg = document.getElementById(`${p}-page`);
+    if(pg) pg.classList.remove('hidden-page');
+    else return;
+    
+    if(p==='dashboard') { renderTopMatches(); attachChipListeners(); }
+    if(p==='matches') { renderMatchesGrid(); attachChipListeners(); }
+    if(p==='community') renderCommunity();
+    if(p==='safety') initSafety();
+  }
+
+  // Build UI
+  const contentDiv = document.getElementById('mainContent');
+  contentDiv.innerHTML = `
+    <div id="dashboard-page"><div class="section-title"><i class="fas fa-fire"></i> Your Top Matches</div><div class="cards-grid" id="topMatchesContainer"></div><div class="filter-chips"><span class="chip" data-filter="verified"><i class="fas fa-shield-alt"></i> Verified Only</span><span class="chip" data-filter="noMaleGuests"><i class="fas fa-user-slash"></i> No Male Guests</span><span class="chip" data-filter="earlyBird"><i class="fas fa-sun"></i> Early Bird</span><span class="chip" data-filter="quietOnly"><i class="fas fa-volume-mute"></i> Quiet Only</span></div><div style="display:flex; gap:16px; margin-bottom:24px"><button class="btn-primary" id="safetyCheckinBtn"><i class="fas fa-phone-alt"></i> Safety Check-In</button><button class="btn-outline" id="reportConcernBtn"><i class="fas fa-flag"></i> Report Concern</button></div><div id="dashboardAltSection"></div><div id="toastMsg" class="text-muted" style="margin-top:16px"></div></div>
+    <div id="matches-page" class="hidden-page"><div class="section-title"><i class="fas fa-handshake"></i> Smart Roommate Matches</div><div class="matches-grid" id="allMatchesGrid"></div><div id="alternativeMatchesSection"></div></div>
+    <div id="messages-page" class="hidden-page"><div class="section-title"><i class="fas fa-comments"></i> Conversations</div><div class="chat-list" id="chatList"></div><div id="chatDetail" style="display:none; margin-top:24px"><div id="activeChatName" style="font-weight:700; font-size:1.2rem; margin-bottom:12px"></div><div style="background:#f8f3ff; border-radius:28px; padding:16px; margin:12px 0" id="chatMessagesArea"></div><div style="display:flex; gap:12px"><input type="text" id="messageInput" placeholder="Type your message..." style="flex:1; padding:14px 20px; border-radius:40px; border:2px solid #f0e8ff"><button class="btn-primary" id="sendMsgBtn">Send</button></div><button class="btn-outline" id="shareLocationBtn" style="margin-top:16px"><i class="fas fa-share-alt"></i> Share Location with Friend</button></div></div>
+    <div id="community-page" class="hidden-page"><div class="section-title"><i class="fas fa-globe-asia"></i> Community Forum</div><div id="forumPosts"></div></div>
+    <div id="safety-page" class="hidden-page"><div class="section-title"><i class="fas fa-shield-heart"></i> Safety Center</div><div class="safety-card"><div style="display:flex; justify-content:space-between; margin-bottom:12px"><span><i class="fas fa-id-card"></i> Identity Verification</span><span style="color:#2c6e2c"><i class="fas fa-check-circle"></i> Verified</span></div><div style="display:flex; justify-content:space-between; margin-bottom:12px"><span><i class="fas fa-search"></i> Background Check</span><span class="text-muted">Optional upgrade</span></div><div style="display:flex; justify-content:space-between; margin-bottom:20px"><span><i class="fas fa-map-marker-alt"></i> Safe Check-In</span><span style="color:#2c6e2c"><i class="fas fa-check"></i> Active</span></div><hr><button class="btn-outline" id="anonymousAlertBtn" style="width:100%; margin:16px 0"><i class="fas fa-exclamation-triangle"></i> Anonymous Alert</button><a id="downloadAgreementLink" style="display:inline-block; text-align:center; width:100%; padding:12px; background:#f5efff; border-radius:40px; text-decoration:none; color:#6c47c2; font-weight:600"><i class="fas fa-file-pdf"></i> Download Roommate Agreement</a></div></div>
+  `;
+
+  document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click',()=>{ 
+      document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); 
+      btn.classList.add('active'); 
+      renderPage(btn.dataset.page); 
+  }));
+  attachChipListeners();
+</script>
+</body>
+</html>

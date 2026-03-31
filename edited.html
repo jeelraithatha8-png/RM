@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Nest & Found | Premium Women-Only Roommate Matching</title>
+  <!-- Font Awesome 6 Pro (free icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(145deg, #fef9f4 0%, #fdf4f8 100%);
+      color: #2d2a3e;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f3ecfc; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #b392e0, #8b6ccf); border-radius: 10px; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .app-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(139, 108, 207, 0.15);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.02);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      background: linear-gradient(135deg, #8b6ccf, #6c47c2);
+      width: 44px;
+      height: 44px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 8px 20px rgba(108, 71, 194, 0.3);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .logo-icon i { font-size: 1.5rem; }
+
+    .logo-text {
+      font-weight: 800;
+      font-size: 1.7rem;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #5e3c9e, #9b7bdf);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .logo-tagline {
+      font-size: 0.7rem;
+      color: #9b8ab5;
+      margin-left: 4px;
+      font-weight: 500;
+    }
+
+    .badge-verified {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #e6f4e6, #d4edd2);
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #2a6b2a;
+      border: 1px solid rgba(70, 130, 70, 0.2);
+    }
+
+    .profile-icon {
+      background: linear-gradient(135deg, #f5efff, #e8defc);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6c47c2;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      border: 2px solid white;
+      box-shadow: 0 6px 16px rgba(108, 71, 194, 0.2);
+    }
+
+    .profile-icon:hover {
+      transform: scale(1.05) rotate(5deg);
+    }
+
+    .main-layout { display: flex; flex: 1; }
+    .sidebar {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      width: 96px;
+      border-right: 1px solid rgba(139, 108, 207, 0.2);
+      padding: 40px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+      position: sticky;
+      top: 80px;
+      height: calc(100vh - 80px);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #9a87b9;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      padding: 12px 0;
+      transition: all 0.3s;
+      border-radius: 24px;
+      position: relative;
+    }
+
+    .nav-item i { font-size: 1.6rem; transition: all 0.3s; }
+
+    .nav-item:hover {
+      color: #6c47c2;
+      background: rgba(108, 71, 194, 0.08);
+    }
+
+    .nav-item.active {
+      color: #6c47c2;
+      background: linear-gradient(135deg, rgba(108, 71, 194, 0.12), rgba(139, 108, 207, 0.08));
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 20%;
+      height: 60%;
+      width: 3px;
+      background: linear-gradient(135deg, #6c47c2, #b392e0);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .content {
+      flex: 1;
+      padding: 32px 40px;
+      overflow-y: auto;
+      max-width: 100%;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #4a3a6e, #7a5cae);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-block;
+    }
+
+    .cards-grid {
+      display: flex;
+      gap: 24px;
+      overflow-x: auto;
+      padding-bottom: 20px;
+      margin-bottom: 32px;
+    }
+
+    .match-card {
+      min-width: 280px;
+      background: white;
+      border-radius: 32px;
+      padding: 20px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(190, 160, 230, 0.3);
+      transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      cursor: pointer;
+    }
+
+    .match-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 24px 48px rgba(108, 71, 194, 0.12);
+    }
+
+    .avatar-large {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #e8defc, #d9caff);
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #6c47c2;
+    }
+
+    .match-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      background: linear-gradient(135deg, #f5f0fe, #ede5ff);
+      padding: 5px 12px;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #6c47c2;
+    }
+
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 28px 0 32px 0;
+    }
+
+    .chip {
+      background: white;
+      border: 1.5px solid #e5d9fc;
+      padding: 10px 22px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #5e4a82;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chip.active {
+      background: linear-gradient(135deg, #6c47c2, #8b6ccf);
+      border-color: #6c47c2;
+      color: white;
+      box-shadow: 0 8px 18px rgba(108, 71, 194, 0.3);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6c47c2, #8b6ccf);
+      border: none;
+      padding: 12px 28px;
+      border-radius: 50px;
+      color: white;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 6px 16px rgba(108, 71, 194, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(108, 71, 194, 0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid #d9caff;
+      padding: 12px 28px;
+      border-radius: 50px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #6c47c2;
+    }
+
+    .matches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 28px;
+      margin-top: 20px;
+    }
+
+    .profile-card {
+      background: white;
+      border-radius: 32px;
+      padding: 22px;
+      border: 1px solid rgba(190, 160, 230, 0.25);
+      transition: all 0.4s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #6c47c2, #b392e0);
+      transform: scaleX(0);
+      transition: transform 0.4s;
+    }
+
+    .profile-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .profile-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(108, 71, 194, 0.1);
+    }
+
+    .compatibility-badge {
+      background: linear-gradient(135deg, #e9e3ff, #dfd5fc);
+      border-radius: 40px;
+      padding: 5px 14px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #5b3d9e;
+    }
+
+    .alternative-section {
+      background: linear-gradient(135deg, #fffaf0, #fff6e8);
+      border-radius: 40px;
+      padding: 28px;
+      margin-top: 40px;
+      border: 1px solid #ffebcd;
+    }
+
+    .room-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .room-card {
+      background: white;
+      border-radius: 28px;
+      padding: 20px;
+      flex: 1;
+      min-width: 200px;
+      border: 1px solid #ffe0b5;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .room-price {
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: #c9772e;
+      margin: 12px 0;
+    }
+
+    .modal-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: 0.25s;
+    }
+
+    .modal-card {
+      background: white;
+      max-width: 680px;
+      width: 90%;
+      border-radius: 48px;
+      padding: 32px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.2);
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #8b6ccf;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 28px;
+      border: 2px solid #f0e8ff;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #b392e0;
+    }
+
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .pill {
+      background: #f5f0fe;
+      padding: 10px 20px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      color: #4a3a6e;
+    }
+
+    .pill.selected {
+      background: linear-gradient(135deg, #6c47c2, #8b6ccf);
+      color: white;
+      box-shadow: 0 6px 14px rgba(108, 71, 194, 0.3);
+      border-color: #fff;
+      transform: scale(1.02);
+    }
+
+    .pill:hover:not(.selected) {
+      background: #e8dcff;
+      transform: translateY(-2px);
+    }
+
+    .hidden-page {
+      display: none;
+    }
+
+    .text-muted {
+      color: #a594c4;
+      font-size: 0.8rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px;
+      background: linear-gradient(135deg, #fef9f4, #fff5f0);
+      border-radius: 48px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 80px; }
+      .content { padding: 20px; }
+      .logo-text { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo-icon"><i class="fas fa-female"></i></div>
+      <div>
+        <span class="logo-text">nest&found</span>
+        <div class="logo-tagline">sisterhood living</div>
+      </div>
+    </div>
+    <div class="badge-verified">
+      <i class="fas fa-check-circle"></i>
+      <span>Verified Identity</span>
+      <i class="fas fa-shield-alt"></i>
+    </div>
+    <div class="profile-icon" id="openProfileModalBtn">
+      <i class="fas fa-user-astronaut fa-lg"></i>
+    </div>
+  </div>
+  <div class="main-layout">
+    <div class="sidebar">
+      <button class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>Home</span></button>
+      <button class="nav-item" data-page="matches"><i class="fas fa-handshake"></i><span>Matches</span></button>
+      <button class="nav-item" data-page="messages"><i class="fas fa-comment-dots"></i><span>Chat</span></button>
+      <button class="nav-item" data-page="community"><i class="fas fa-globe-asia"></i><span>Connect</span></button>
+      <button class="nav-item" data-page="safety"><i class="fas fa-heart-shield"></i><span>Safety</span></button>
+    </div>
+    <div class="content" id="mainContent"></div>
+  </div>
+</div>
+
+<!-- Profile Modal with fully selectable preference pills -->
+<div id="profileModal" class="modal-bg">
+  <div class="modal-card">
+    <h2 style="margin-bottom: 24px;"><i class="fas fa-user-edit"></i> Your Profile · Preferences</h2>
+    <div class="form-group"><label><i class="fas fa-user"></i> Name</label><input id="profileName" value="Aarohi"></div>
+    <div class="form-group"><label><i class="fas fa-calendar"></i> Age</label><input id="profileAge" type="number" value="26"></div>
+    <div class="form-group"><label><i class="fas fa-briefcase"></i> Occupation</label><select id="profileOcc"><option>Developer</option><option>Nurse</option><option>Engineer</option><option>Designer</option><option>Supporting Staff</option></select></div>
+    
+    <!-- Sleep Preference selectable pills -->
+    <div class="form-group"><label><i class="fas fa-moon"></i> Sleep Preference</label><div class="pill-group" id="sleepPrefGroup"><span class="pill" data-sleep="Morning">🌅 Morning</span><span class="pill" data-sleep="Evening">🌆 Evening</span><span class="pill" data-sleep="Night">🌙 Night</span></div></div>
+    <!-- Sleep Sensitivity -->
+    <div class="form-group"><label><i class="fas fa-bed"></i> Sleep Sensitivity</label><div class="pill-group" id="sleepSenseGroup"><span class="pill" data-sense="Light Sleeper">😴 Light Sleeper</span><span class="pill" data-sense="Heavy Sleeper">💤 Heavy Sleeper</span></div></div>
+    <!-- Personality -->
+    <div class="form-group"><label><i class="fas fa-smile"></i> Personality</label><div class="pill-group" id="personalityGroup"><span class="pill" data-personality="Extrovert">🎉 Extrovert</span><span class="pill" data-personality="Introvert">📖 Introvert</span></div></div>
+    <!-- Living Habits -->
+    <div class="form-group"><label><i class="fas fa-home"></i> Living Habits</label><div class="pill-group" id="habitsGroup"><span class="pill" data-habit="Organized">📦 Organized</span><span class="pill" data-habit="Flexible">🌀 Flexible</span><span class="pill" data-habit="Mixed">⚖️ Mixed</span></div></div>
+    <!-- Noise Tolerance -->
+    <div class="form-group"><label><i class="fas fa-volume-down"></i> Noise Tolerance</label><div class="pill-group" id="noiseGroup"><span class="pill" data-noise="Quiet">🔇 Quiet Only</span><span class="pill" data-noise="Noisy">🔊 OK with Noise</span></div></div>
+    <!-- Guest Policy -->
+    <div class="form-group"><label><i class="fas fa-user-friends"></i> Guest Policy</label><div class="pill-group" id="guestPolicyGroup"><span class="pill" data-guest="No Guests">🚫 No Guests</span><span class="pill" data-guest="Occasional">👥 Occasional</span><span class="pill" data-guest="Male Allowed">🚹 Male Allowed</span></div></div>
+    
+    <button class="btn-primary" id="verifyIdUploadBtn" style="width:100%; margin-top: 8px;"><i class="fas fa-id-card"></i> Verify Government ID</button>
+    <button class="btn-outline" id="closeModalBtn" style="width:100%; margin-top: 16px;">Save Profile & Preferences</button>
+  </div>
+</div>
+
+<script>
+  // Roommates dataset
+  const roommatesDataset = [
+    { id:1, name:"Sophia", age:24, occupation:"Nurse", sleepPref:"Night", sleepSense:"Light Sleeper", personality:"Extrovert", livingHabit:"Organized", noiseTolerance:"Quiet", guestPolicy:"No Guests", verified:true, compatibilityScore:9.2, bedtime:"11PM", wakeup:"7AM", tags:["night owl","quiet","organized"], image:"👩‍⚕️" },
+    { id:2, name:"Maya", age:27, occupation:"Developer", sleepPref:"Morning", sleepSense:"Heavy Sleeper", personality:"Introvert", livingHabit:"Flexible", noiseTolerance:"Quiet", guestPolicy:"Occasional", verified:true, compatibilityScore:8.8, bedtime:"10PM", wakeup:"6AM", tags:["early bird","flexible","coding"], image:"💻" },
+    { id:3, name:"Zara", age:23, occupation:"Supporting Staff", sleepPref:"Evening", sleepSense:"Light Sleeper", personality:"Extrovert", livingHabit:"Mixed", noiseTolerance:"Noisy", guestPolicy:"Male Allowed", verified:false, compatibilityScore:7.2, bedtime:"1AM", wakeup:"9AM", tags:["social","male guests","evening"], image:"🎨" },
+    { id:4, name:"Emma", age:29, occupation:"Engineer", sleepPref:"Morning", sleepSense:"Light Sleeper", personality:"Introvert", livingHabit:"Organized", noiseTolerance:"Quiet", guestPolicy:"No Guests", verified:true, compatibilityScore:9.5, bedtime:"9:30PM", wakeup:"5:30AM", tags:["LGBTQ+ friendly","minimalist","quiet"], image:"🔧" },
+    { id:5, name:"Olivia", age:25, occupation:"Nurse", sleepPref:"Night", sleepSense:"Heavy Sleeper", personality:"Introvert", livingHabit:"Flexible", noiseTolerance:"Quiet", guestPolicy:"Occasional", verified:true, compatibilityScore:8.4, bedtime:"12AM", wakeup:"8AM", tags:["night shift","cat lover","books"], image:"📚" },
+    { id:6, name:"Priya", age:26, occupation:"Developer", sleepPref:"Morning", sleepSense:"Heavy Sleeper", personality:"Extrovert", livingHabit:"Organized", noiseTolerance:"Noisy", guestPolicy:"Male Allowed", verified:true, compatibilityScore:8.9, bedtime:"10PM", wakeup:"6:30AM", tags:["gym","cooking","hosting"], image:"🏋️" },
+    { id:7, name:"Aisha", age:22, occupation:"Supporting Staff", sleepPref:"Evening", sleepSense:"Light Sleeper", personality:"Extrovert", livingHabit:"Mixed", noiseTolerance:"Noisy", guestPolicy:"Occasional", verified:false, compatibilityScore:7.8, bedtime:"2AM", wakeup:"10AM", tags:["art","music","late nights"], image:"🎵" }
+  ];
+
+  const alternativeOptions = [
+    { type: "Private Single Room", description: "Fully furnished, AC, Wi-Fi", price: "₹8,500/month", availability: "3 rooms", icon: "fa-bed", color: "#e6b8a2" },
+    { type: "Studio Apartment", description: "Private kitchen & bath", price: "₹12,500/month", availability: "2 units", icon: "fa-building", color: "#c5a3ff" },
+    { type: "Premium Suite", description: "Luxury amenities, gym access", price: "₹10,500/month", availability: "1 spot", icon: "fa-crown", color: "#ffd966" },
+    { type: "Flexible Short-term", description: "Monthly lease, all included", price: "₹9,000/month", availability: "Available", icon: "fa-calendar-alt", color: "#9fc5e8" }
+  ];
+
+  // Current user preferences - all selectable
+  let currentUser = { 
+    name: "Aarohi", age: 26, occupation: "Developer", 
+    sleepPref: "Morning", sleepSense: "Light Sleeper", personality: "Introvert", 
+    livingHabit: "Organized", noiseTolerance: "Quiet", guestPolicy: "No Guests" 
+  };
+  
+  let currentFilter = null;
+
+  // Helper: attach pill selection logic to a group (sets active class and updates user object)
+  function makePillGroup(groupId, userKey, optionsMap) {
+    const container = document.getElementById(groupId);
+    if(!container) return;
+    const pills = container.querySelectorAll('.pill');
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        // remove selected class from siblings
+        pills.forEach(p => p.classList.remove('selected'));
+        pill.classList.add('selected');
+        // Get value from data attribute (dynamic)
+        let value = '';
+        for(let key in optionsMap) {
+          if(pill.hasAttribute(`data-${key}`)) {
+            value = pill.getAttribute(`data-${key}`);
+            break;
+          }
+        }
+        if(value) currentUser[userKey] = value;
+        // Recompute matches after profile change (refresh grid if visible)
+        refreshActivePage();
+      });
+      // set initial selected based on currentUser
+      const pillValue = pill.getAttribute(`data-${Object.keys(optionsMap)[0]}`) || pill.getAttribute('data-sleep') || pill.getAttribute('data-sense') || pill.getAttribute('data-personality') || pill.getAttribute('data-habit') || pill.getAttribute('data-noise') || pill.getAttribute('data-guest');
+      if(pillValue === currentUser[userKey]) pill.classList.add('selected');
+    });
+  }
+
+  function initProfilePills() {
+    makePillGroup('sleepPrefGroup', 'sleepPref', { sleep: 'sleepPref' });
+    makePillGroup('sleepSenseGroup', 'sleepSense', { sense: 'sleepSense' });
+    makePillGroup('personalityGroup', 'personality', { personality: 'personality' });
+    makePillGroup('habitsGroup', 'livingHabit', { habit: 'livingHabit' });
+    makePillGroup('noiseGroup', 'noiseTolerance', { noise: 'noiseTolerance' });
+    makePillGroup('guestPolicyGroup', 'guestPolicy', { guest: 'guestPolicy' });
+  }
+
+  // Filter matches based on currentUser preferences (smart compatibility)
+  function filterMatchesByUserPreferences() {
+    let filtered = [...roommatesDataset];
+    // Weighted matching: filter exact matches on critical fields (sleepPref, guestPolicy, noiseTolerance)
+    filtered = filtered.filter(m => m.sleepPref === currentUser.sleepPref);
+    filtered = filtered.filter(m => m.guestPolicy === currentUser.guestPolicy || (currentUser.guestPolicy === "No Guests" && m.guestPolicy === "No Guests"));
+    filtered = filtered.filter(m => m.noiseTolerance === currentUser.noiseTolerance);
+    // Additional soft filter: personality match gives preference but not strict removal
+    if(currentFilter === 'verified') filtered = filtered.filter(m => m.verified);
+    if(currentFilter === 'noMaleGuests') filtered = filtered.filter(m => m.guestPolicy === "No Guests");
+    if(currentFilter === 'earlyBird') filtered = filtered.filter(m => m.sleepPref === "Morning");
+    if(currentFilter === 'quietOnly') filtered = filtered.filter(m => m.noiseTolerance === "Quiet");
+    if(currentFilter === 'introvert') filtered = filtered.filter(m => m.personality === "Introvert");
+    
+    // Recalculate compatibility score based on currentUser for better ranking
+    filtered = filtered.map(m => {
+      let score = 7.0;
+      if(m.sleepPref === currentUser.sleepPref) score += 1.2;
+      if(m.guestPolicy === currentUser.guestPolicy) score += 1.0;
+      if(m.noiseTolerance === currentUser.noiseTolerance) score += 1.0;
+      if(m.personality === currentUser.personality) score += 0.8;
+      if(m.livingHabit === currentUser.livingHabit) score += 0.6;
+      if(m.sleepSense === currentUser.sleepSense) score += 0.5;
+      m.compatibilityScore = Math.min(9.9, parseFloat(score.toFixed(1)));
+      return m;
+    }).sort((a,b) => b.compatibilityScore - a.compatibilityScore);
+    return filtered;
+  }
+
+  function renderMatchesGrid() {
+    let filtered = filterMatchesByUserPreferences();
+    const grid = document.getElementById('allMatchesGrid');
+    if(!grid) return;
+    const insufficient = filtered.length < 2;
+    if(filtered.length === 0) grid.innerHTML = `<div class="empty-state"><i class="fas fa-heart-broken fa-3x" style="color:#c5a3ff"></i><h3 style="margin:16px 0">No matches found</h3><p class="text-muted">Try updating preferences in your profile ✨</p></div>`;
+    else grid.innerHTML = filtered.map(m => `<div class="profile-card" onclick="showProfile(${m.id})"><div style="display:flex; justify-content:space-between; align-items:center"><div><span style="font-size:1.2rem; font-weight:800">${m.name}, ${m.age}</span> ${m.verified ? '<i class="fas fa-badge-check" style="color:#2c6e2c"></i>' : ''}</div><span class="compatibility-badge"><i class="fas fa-star"></i> ${m.compatibilityScore}</span></div><div class="text-muted" style="margin:12px 0"><i class="fas fa-briefcase"></i> ${m.occupation} • <i class="fas fa-moon"></i> ${m.sleepPref} • <i class="fas fa-user"></i> ${m.personality}</div><div class="match-tags">${m.tags.slice(0,3).map(t=>`<span class="tag"><i class="fas fa-tag"></i> ${t}</span>`).join('')}</div><div class="text-muted" style="margin-top:10px"><i class="far fa-clock"></i> ${m.bedtime} - ${m.wakeup}</div></div>`).join('');
+    const altContainer = document.getElementById('alternativeMatchesSection');
+    if(altContainer) {
+      if(insufficient) {
+        altContainer.innerHTML = `<div class="alternative-section" data-aos="fade-up"><div style="display:flex; align-items:center; gap:12px; font-size:1.3rem; font-weight:700; color:#b45f2b"><i class="fas fa-home"></i> Explore Private Rooms Nearby</div><div class="room-options">${alternativeOptions.map(o => `<div class="room-card"><i class="fas ${o.icon} fa-2x" style="color:#c9772e"></i><h4 style="margin:12px 0 8px">${o.type}</h4><div class="room-price">${o.price}</div><div class="text-muted">${o.description}</div><button class="btn-outline" style="margin-top:12px; width:100%" onclick="alert('✅ Inquiry sent for ${o.type}. Coordinator will reach out.')"><i class="fas fa-paper-plane"></i> Enquire</button></div>`).join('')}</div></div>`;
+      } else altContainer.innerHTML = '';
+    }
+  }
+
+  function renderTopMatches() {
+    const top = filterMatchesByUserPreferences().slice(0,3);
+    const container = document.getElementById('topMatchesContainer');
+    if(container) container.innerHTML = top.map(m => `<div class="match-card" onclick="showProfile(${m.id})"><div style="display:flex; gap:16px; align-items:center"><div class="avatar-large"><i class="fas fa-female"></i></div><div><h3 style="font-size:1.2rem">${m.name}, ${m.age}</h3><div class="text-muted"><i class="fas fa-briefcase"></i> ${m.occupation}</div></div></div><div class="match-tags"><span class="tag"><i class="fas fa-moon"></i> ${m.sleepPref}</span><span class="tag"><i class="fas fa-heart"></i> ${m.compatibilityScore}★</span><span class="tag"><i class="fas fa-user-friends"></i> ${m.personality}</span></div></div>`).join('');
+    const dashAlt = document.getElementById('dashboardAltSection');
+    if(dashAlt) dashAlt.innerHTML = `<div class="alternative-section" style="background:linear-gradient(135deg,#faf5ff,#f5edff); margin-top:20px"><div><i class="fas fa-home"></i> <strong>Private Room Options</strong></div><div class="room-options">${alternativeOptions.slice(0,2).map(o=>`<div class="room-card"><i class="fas ${o.icon} fa-2x"></i><strong>${o.type}</strong><div class="room-price">${o.price}</div><button class="btn-outline" style="margin-top:8px" onclick="alert('Inquire about ${o.type}')">View</button></div>`).join('')}</div></div>`;
+  }
+
+  function refreshActivePage() {
+    const activeNav = document.querySelector('.nav-item.active');
+    if(activeNav) renderPage(activeNav.dataset.page);
+  }
+
+  window.showProfile = (id) => {
+    const u = roommatesDataset.find(x=>x.id===id);
+    alert(`👤 ${u.name}\n🎂 ${u.age} years\n💼 ${u.occupation}\n🌙 Sleep: ${u.sleepPref} (${u.sleepSense})\n🧠 ${u.personality}\n🏠 ${u.livingHabit}\n🔊 Noise: ${u.noiseTolerance}\n🚪 Guests: ${u.guestPolicy}\n⭐ Compatibility: ${u.compatibilityScore}/10`);
+  };
+
+  function renderCommunity() {
+    const posts = [{ title:"Safe neighborhoods for women near tech parks", upvotes:42, replies:18 },{ title:"How to split rent fairly in Bangalore (INR)", upvotes:56, replies:24 },{ title:"Quiet hours agreement template for night shift workers", upvotes:31, replies:12 },{ title:"Extrovert & introvert living — harmony tips", upvotes:27, replies:9 }];
+    document.getElementById('forumPosts').innerHTML = posts.map(p => `<div class="forum-item"><div style="display:flex; justify-content:space-between"><strong><i class="fas fa-comment"></i> ${p.title}</strong></div><div style="margin-top:12px; display:flex; gap:20px"><span><i class="far fa-thumbs-up"></i> ${p.upvotes}</span><span><i class="far fa-comment"></i> ${p.replies} replies</span><span><i class="fas fa-share-alt"></i> share</span></div></div>`).join('');
+  }
+
+  let conversations = [{ userId:1, name:"Sophia", lastMsg:"I'm a night shift nurse", messages:[{from:"Sophia", text:"Hi! I prefer quiet after 10pm."}] },{ userId:4, name:"Emma", lastMsg:"Early morning routine?", messages:[{from:"Emma", text:"Would you be okay with organized common spaces?"}] }];
+  function loadChatPreviews() { const c = document.getElementById('chatList'); if(c) c.innerHTML = conversations.map(cn => `<div class="chat-item" data-cid="${cn.userId}"><div class="avatar-large" style="width:50px;height:50px"><i class="fas fa-user-circle fa-2x"></i></div><div><strong>${cn.name}</strong><div class="text-muted">${cn.lastMsg}</div></div></div>`).join(''); document.querySelectorAll('.chat-item').forEach(el=>el.addEventListener('click',()=>openChat(parseInt(el.dataset.cid)))); }
+  function openChat(id) { const chat = conversations.find(c=>c.userId===id); if(chat){ document.getElementById('activeChatName').innerHTML = `<i class="fas fa-comment"></i> ${chat.name}`; document.getElementById('chatMessagesArea').innerHTML = chat.messages.map(m=>`<div><strong>${m.from}:</strong> ${m.text}</div>`).join(''); document.getElementById('chatDetail').style.display='block'; document.getElementById('sendMsgBtn').onclick = ()=>{ const inp=document.getElementById('messageInput'); if(inp.value){ chat.messages.push({from:"You", text:inp.value}); openChat(id); inp.value=''; } }; document.getElementById('shareLocationBtn').onclick = ()=>alert("📍 Live location shared with emergency contact."); } }
+  function initSafety() { document.getElementById('anonymousAlertBtn')?.addEventListener('click',()=>alert('🚨 Anonymous report submitted.')); document.getElementById('downloadAgreementLink')?.addEventListener('click',e=>{e.preventDefault(); alert('📄 Roommate Agreement Template downloaded.');}); }
+
+  function attachChipListeners() { 
+    document.querySelectorAll('.chip[data-filter]').forEach(chip=>{ chip.removeEventListener('click', chip._hdl); const fn = ()=>{ document.querySelectorAll('.chip[data-filter]').forEach(c=>c.classList.remove('active')); chip.classList.add('active'); currentFilter = chip.dataset.filter; refreshActivePage(); }; chip.addEventListener('click', fn); chip._hdl = fn; }); 
+  }
+
+  function renderPage(p) {
+    document.querySelectorAll('[id$="-page"]').forEach(el=>el.classList.add('hidden-page'));
+    document.getElementById(`${p}-page`).classList.remove('hidden-page');
+    if(p==='dashboard') { renderTopMatches(); attachChipListeners(); }
+    if(p==='matches') { renderMatchesGrid(); attachChipListeners(); }
+    if(p==='messages') { loadChatPreviews(); document.getElementById('chatDetail').style.display='none'; }
+    if(p==='community') renderCommunity();
+    if(p==='safety') initSafety();
+  }
+
+  // Build UI structure
+  const contentDiv = document.getElementById('mainContent');
+  contentDiv.innerHTML = `
+    <div id="dashboard-page"><div class="section-title"><i class="fas fa-fire"></i> Your Top Matches</div><div class="cards-grid" id="topMatchesContainer"></div><div class="filter-chips"><span class="chip" data-filter="verified"><i class="fas fa-shield-alt"></i> Verified Only</span><span class="chip" data-filter="noMaleGuests"><i class="fas fa-user-slash"></i> No Male Guests</span><span class="chip" data-filter="earlyBird"><i class="fas fa-sun"></i> Early Bird</span><span class="chip" data-filter="quietOnly"><i class="fas fa-volume-mute"></i> Quiet Only</span></div><div style="display:flex; gap:16px; margin-bottom:24px"><button class="btn-primary" id="safetyCheckinBtn"><i class="fas fa-phone-alt"></i> Safety Check-In</button><button class="btn-outline" id="reportConcernBtn"><i class="fas fa-flag"></i> Report Concern</button></div><div id="dashboardAltSection"></div><div id="toastMsg" class="text-muted" style="margin-top:16px"></div></div>
+    <div id="matches-page" class="hidden-page"><div class="section-title"><i class="fas fa-handshake"></i> Smart Roommate Matches</div><div class="matches-grid" id="allMatchesGrid"></div><div id="alternativeMatchesSection"></div></div>
+    <div id="messages-page" class="hidden-page"><div class="section-title"><i class="fas fa-comments"></i> Conversations</div><div class="chat-list" id="chatList"></div><div id="chatDetail" style="display:none; margin-top:24px"><div id="activeChatName" style="font-weight:700; font-size:1.2rem; margin-bottom:12px"></div><div style="background:#f8f3ff; border-radius:28px; padding:16px; margin:12px 0" id="chatMessagesArea"></div><div style="display:flex; gap:12px"><input type="text" id="messageInput" placeholder="Type your message..." style="flex:1; padding:14px 20px; border-radius:40px; border:2px solid #f0e8ff"><button class="btn-primary" id="sendMsgBtn">Send</button></div><button class="btn-outline" id="shareLocationBtn" style="margin-top:16px"><i class="fas fa-share-alt"></i> Share Location with Friend</button></div></div>
+    <div id="community-page" class="hidden-page"><div class="section-title"><i class="fas fa-globe-asia"></i> Community Forum</div><div id="forumPosts"></div></div>
+    <div id="safety-page" class="hidden-page"><div class="section-title"><i class="fas fa-shield-heart"></i> Safety Center</div><div class="safety-card"><div><i class="fas fa-id-card"></i> Identity Verification <span style="color:#2c6e2c">✓ Verified</span></div><hr style="margin:16px 0"><button class="btn-outline" id="anonymousAlertBtn" style="width:100%"><i class="fas fa-exclamation-triangle"></i> Anonymous Alert</button><a id="downloadAgreementLink" style="display:inline-block; text-align:center; width:100%; margin-top:16px; background:#f5efff; border-radius:40px; padding:12px; text-decoration:none; color:#6c47c2"><i class="fas fa-file-pdf"></i> Download Roommate Agreement</a></div></div>
+  `;
+
+  document.getElementById('safetyCheckinBtn')?.addEventListener('click',()=>{ document.getElementById('toastMsg').innerHTML='<i class="fas fa-check-circle"></i> Check-in alert sent to trusted contacts.'; setTimeout(()=>document.getElementById('toastMsg').innerHTML='',3000); });
+  document.getElementById('reportConcernBtn')?.addEventListener('click',()=>alert('Your report has been submitted anonymously.'));
+
+  // Modal logic
+  const modal = document.getElementById('profileModal');
+  document.getElementById('openProfileModalBtn').addEventListener('click',()=>{
+    document.getElementById('profileName').value = currentUser.name;
+    document.getElementById('profileAge').value = currentUser.age;
+    document.getElementById('profileOcc').value = currentUser.occupation;
+    initProfilePills(); // re-init highlights
+    modal.style.visibility='visible'; modal.style.opacity='1';
+  });
+  document.getElementById('closeModalBtn').addEventListener('click',()=>{
+    currentUser.name = document.getElementById('profileName').value;
+    currentUser.age = parseInt(document.getElementById('profileAge').value) || 26;
+    currentUser.occupation = document.getElementById('profileOcc').value;
+    modal.style.visibility='hidden'; modal.style.opacity='0';
+    refreshActivePage();
+    alert('✨ Profile & preferences updated! Your matches are now personalized.');
+  });
+  document.getElementById('verifyIdUploadBtn').addEventListener('click',()=>alert('✅ ID verification submitted. You will receive confirmation within 24 hours.'));
+
+  document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderPage(btn.dataset.page); }));
+  
+  // Initialization
+  initProfilePills();
+  renderPage('dashboard');
+  attachChipListeners();
+</script>
+</body>
+</html>

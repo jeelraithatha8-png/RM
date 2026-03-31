@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/app/main.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "index2.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/app/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "index2.html"
+    }
+  ],
+  "env": {
+    "SECRET_KEY": "@nestfound_secret_key",
+    "DATABASE_URL": "@nestfound_db_url"
+  }
+}
