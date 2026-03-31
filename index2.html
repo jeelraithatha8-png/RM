@@ -576,6 +576,44 @@
       .logo-text { font-size: 1.2rem; }
       .section-title { font-size: 1.4rem; }
     }
+
+    /* --- Dark Mode Variables & Overrides --- */
+    body.dark-theme {
+      background: linear-gradient(145deg, #161225 0%, #1e1832 100%);
+      color: #f1ecfc;
+    }
+    body.dark-theme .header {
+      background: rgba(22, 18, 37, 0.96);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    body.dark-theme .sidebar {
+      background: rgba(30, 24, 48, 0.7);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    body.dark-theme .logo-text { background: linear-gradient(135deg, #a788ea, #d4bfff); -webkit-background-clip: text; background-clip: text; }
+    body.dark-theme .match-card, 
+    body.dark-theme .profile-card, 
+    body.dark-theme .modal-card, 
+    body.dark-theme .safety-card, 
+    body.dark-theme .forum-item, 
+    body.dark-theme .chat-item {
+      background: #231c36;
+      border-color: rgba(255, 255, 255, 0.05);
+      color: #e2d9fc;
+    }
+    body.dark-theme .modal-bg { background: rgba(0, 0, 0, 0.85); }
+    body.dark-theme .match-card:hover, body.dark-theme .profile-card:hover { border-color: #6c47c2; }
+    body.dark-theme .section-title { background: linear-gradient(135deg, #d3c0ff, #f3ecfc); -webkit-background-clip: text; background-clip: text; }
+    body.dark-theme .btn-outline { color: #d3c0ff; border-color: #5e4a82; }
+    body.dark-theme .btn-outline:hover { background: rgba(108, 71, 194, 0.2); }
+    body.dark-theme .chip { background: #2a2240; color: #d3c0ff; border-color: #4c3773; }
+    body.dark-theme .chip:hover { background: #3c2f5a; }
+    body.dark-theme .nav-item { color: #8e7ba6; }
+    body.dark-theme .nav-item.active { background: rgba(108, 71, 194, 0.2); color: #d3c0ff; }
+    body.dark-theme .pill { background: #31264a; color: #e2d9fc; }
+    body.dark-theme .pill.selected { background: linear-gradient(135deg, #8b6ccf, #6c47c2); }
+    body.dark-theme input, body.dark-theme select { background: #1a1528; color: #fff; border-color: #493b6e; }
+    body.dark-theme .empty-state { background: linear-gradient(135deg, #1e1832, #161225); }
   </style>
 </head>
 <body>
@@ -594,6 +632,7 @@
       <i class="fas fa-shield-alt"></i>
     </div>
     <div style="display:flex; align-items:center; gap:12px">
+      <button class="btn-outline" id="themeToggleBtn" style="padding:8px 14px; font-size:1rem; border-radius:40px; border:none; background:transparent;"><i class="fas fa-moon"></i></button>
       <button class="btn-outline" id="logoutBtn" style="padding:8px 18px; font-size:0.8rem; border-radius:40px;"><i class="fas fa-sign-out-alt"></i> Logout</button>
       <div class="profile-icon" id="openProfileModalBtn">
         <i class="fas fa-user-astronaut fa-lg"></i>
@@ -670,10 +709,32 @@
 
   // ── XSS Protection: escape user-generated HTML ──
   function escapeHTML(str) {
+    if (!str) return '';
     const div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
   }
+
+  // ═══ DARK MODE TOGGLE ═══
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  let isDarkMode = localStorage.getItem('theme') === 'dark';
+  
+  function applyTheme() {
+    if (isDarkMode) {
+      document.body.classList.add('dark-theme');
+      themeToggleBtn.innerHTML = '<i class="fas fa-sun" style="color: #ffd700"></i>';
+    } else {
+      document.body.classList.remove('dark-theme');
+      themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+  }
+  
+  themeToggleBtn.addEventListener('click', () => {
+    isDarkMode = !isDarkMode;
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    applyTheme();
+  });
+  applyTheme();
 
   // ── Utility: Score color ──
   function scoreColor(score) {
@@ -949,15 +1010,23 @@
       const content = input.value.trim();
       if (!content) return;
 
+      // Optimistic Chat Rendering! Append directly to DOM instead of reloading
+      const chatArea = document.getElementById('chatMessagesArea');
+      const timeStr = new Date().toLocaleTimeString();
+      const msgHtml = `<div style="text-align:right; margin:8px 0">
+              <span style="background:linear-gradient(135deg, #6c47c2, #8b6ccf); color:#fff; padding:10px 18px; border-radius:20px; display:inline-block; max-width:70%; font-size:0.9rem">${escapeHTML(content)}</span>
+              <div class="text-muted" style="font-size:0.65rem; margin-top:2px">${timeStr}</div>
+            </div>`;
+      chatArea.insertAdjacentHTML('beforeend', msgHtml);
+      chatArea.scrollTop = chatArea.scrollHeight; // Scroll to bottom
+      input.value = '';
+
       try {
         await fetch(`${API_URL}/chat/send`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ receiver_id: userId, content })
         });
-        input.value = '';
-        // Reload messages
-        openChat(userId, userName);
       } catch (e) { showToast('Failed to send message.'); }
     });
   };

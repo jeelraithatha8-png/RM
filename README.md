@@ -17,13 +17,13 @@
 
 | Feature | Description |
 |---------|-------------|
-| 🤖 **AI-Powered Matching** | Hybrid Rule-Based + ML cosine similarity engine scores compatibility out of 10 |
+| 🤖 **AI-Powered Matching** | Hybrid Rule-Based + ML cosine similarity engine (includes age proximity matching) scores compatibility out of 10 |
 | 🔐 **Secure Authentication** | JWT-based auth with bcrypt password hashing |
 | 🛡️ **Safety Center** | Identity verification, anonymous reporting, emergency alerts |
-| 💬 **Real-Time Chat** | Direct messaging between matched users |
+| 💬 **Real-Time Chat** | Direct messaging between matched users with optimistic DOM rendering |
 | 🏘️ **Community Forum** | Discussion threads on safe neighborhoods, rent splitting, etc. |
 | 🔍 **Smart Filters** | Filter by verified users, early birds, quiet preference, guest policy |
-| 📱 **Responsive UI** | Glassmorphism design with animations, works on mobile and desktop |
+| 📱 **Responsive UI** | Premium layout with dynamic Light/Dark Mode toggle and glassmorphism styling |
 
 ---
 

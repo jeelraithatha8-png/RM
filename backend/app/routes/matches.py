@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from typing import Optional
+from fastapi.encoders import jsonable_encoder
+import json
 
 from app.database import get_db, get_redis
 from app.models.user import User, Preference
@@ -74,7 +76,7 @@ async def fetch_and_calculate_matches(
         if resolved_filter == "noMaleGuests" and cand.preference.guest_policy == "Male Allowed":
             continue
             
-        score, explanation = calculate_compatibility(current_pref, cand.preference)
+        score, explanation = calculate_compatibility(current_user, cand)
         
         # Only include reasonable matches > 4.0
         if score > 4.0:
@@ -110,9 +112,18 @@ async def get_top_matches(
     cached = await redis.get(cache_key)
     
     if cached:
-        pass  # Cache hit — in production, deserialize and return
+        try:
+            matches_data = json.loads(cached)
+            return {"matches": matches_data}
+        except json.JSONDecodeError:
+            pass
         
     matches = await fetch_and_calculate_matches(current_user, db, limit=5)
+    
+    # Cache the serialized results for 5 minutes (300 seconds)
+    encoded_matches = jsonable_encoder(matches)
+    await redis.setex(cache_key, 300, json.dumps(encoded_matches))
+    
     return {"matches": matches}
 
 

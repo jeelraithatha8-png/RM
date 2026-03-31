@@ -11,7 +11,7 @@ Architecture:
 """
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from app.models.user import Preference
+from app.models.user import Preference, User
 
 
 # Compatibility tier thresholds
@@ -112,27 +112,23 @@ def generate_explanation(u1: Preference, u2: Preference, score: float) -> str:
     return f"{tier} — Complementary lifestyle match."
 
 
-def calculate_compatibility(current_pref: Preference, candidate_pref: Preference):
+def calculate_compatibility(current_user: User, candidate_user: User):
     """
     Calculate the final compatibility score between two users.
     
     Uses a 50/50 weighted combination of:
-    - Rule-Based scoring (weighted exact matches on preference fields)
+    - Rule-Based scoring (weighted exact matches and age proximity)
     - ML Cosine Similarity (one-hot encoded preference vectors)
-    
-    Args:
-        current_pref: The logged-in user's preferences.
-        candidate_pref: A candidate user's preferences.
-    
-    Returns:
-        Tuple of (score: float, explanation: str) where score is 0.0-10.0
     """
+    current_pref = current_user.preference
+    candidate_pref = candidate_user.preference
+
     if current_pref is None or candidate_pref is None:
         return 0.0, "Missing preferences"
         
     # Rule-Based Score
     rule_score = 0
-    max_rule_score = 22  # 3×5 + 2×3 + 1×1 = 22
+    max_rule_score = 25  # 3×5 + 2×3 + 1×1 + Age(up to 3) = 25
     
     # High Weight (5 points each) — non-negotiables
     if current_pref.sleep_pref == candidate_pref.sleep_pref:
@@ -152,6 +148,16 @@ def calculate_compatibility(current_pref: Preference, candidate_pref: Preference
     if current_pref.sleep_sense == candidate_pref.sleep_sense:
         rule_score += 1
         
+    # Age Proximity Weight (up to 3 points)
+    if current_user.age is not None and candidate_user.age is not None:
+        age_diff = abs(current_user.age - candidate_user.age)
+        if age_diff <= 2:
+            rule_score += 3
+        elif age_diff <= 5:
+            rule_score += 2
+        elif age_diff <= 10:
+            rule_score += 1
+            
     normalized_rule_score = rule_score / max_rule_score
     
     # ML Score (0.0 to 1.0)
@@ -162,4 +168,10 @@ def calculate_compatibility(current_pref: Preference, candidate_pref: Preference
     final_score = round(final_score, 1)
     
     explanation = generate_explanation(current_pref, candidate_pref, final_score)
+    
+    # Append age relevance to explanation if they are very close
+    if current_user.age is not None and candidate_user.age is not None:
+        if abs(current_user.age - candidate_user.age) <= 2:
+            explanation += " (Similar Age)"
+            
     return final_score, explanation
