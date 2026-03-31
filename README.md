@@ -219,10 +219,7 @@ The project is configured for **Vercel** serverless deployment:
 
 | Name | Role |
 |------|------|
-| Anand | Full-Stack Developer |
+| Anand | Fun-Stack Developer |
 
 ---
 
-## 📄 License
-
-This project is developed as an academic capstone project.
