@@ -20,9 +20,5 @@
       "src": "/(.*)",
       "dest": "index2.html"
     }
-  ],
-  "env": {
-    "SECRET_KEY": "@nestfound_secret_key",
-    "DATABASE_URL": "@nestfound_db_url"
-  }
+  ]
 }
