@@ -1,5 +1,13 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field
+import os
+
+
+def _default_db_url():
+    """Use /tmp/ for SQLite on Vercel (read-only filesystem), else local path."""
+    if os.environ.get("VERCEL"):
+        return "sqlite+aiosqlite:////tmp/nestfound.db"
+    return "sqlite+aiosqlite:///./nestfound.db"
 
 
 class Settings(BaseSettings):
@@ -12,7 +20,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
 
     # Database
-    DATABASE_URL: str = Field(default="sqlite+aiosqlite:///./nestfound.db")
+    DATABASE_URL: str = Field(default_factory=_default_db_url)
     
     # Redis
     REDIS_URL: str = Field(default="mock_redis")

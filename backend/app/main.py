@@ -1,3 +1,11 @@
+import sys
+import os
+
+# Ensure 'backend/' is on sys.path for Vercel serverless deployment
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
