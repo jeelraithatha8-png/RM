@@ -1,19 +1,18 @@
-import pandas as pd
+import csv
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User, Preference
 from app.utils.security import get_password_hash
 
 async def load_kaggle_dataset(file_path: str, db: AsyncSession):
     try:
-        df = pd.read_csv(file_path)
+        with open(file_path, mode='r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            data = list(reader)
     except Exception as e:
         print(f"Error loading CSV {file_path}: {str(e)}")
         return False
         
-    # Expected columns roughly mapping user and preference schema
-    # df.fillna("Unknown", inplace=True)
-    
-    for index, row in df.iterrows():
+    for index, row in enumerate(data):
         email = f"user_{index}@nestfound.local"
         
         # Simple check if exists

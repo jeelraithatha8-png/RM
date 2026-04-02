@@ -313,6 +313,7 @@
   let currentCardIndex = 0;
   let matchesForSwipe = [];
   let currentFilter = null;
+  const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000/api/v1' : '/api/v1';
 
   const roommatesDataset = [
     { id:1, name:"Jyotasana", age:24, occupation:"Nurse", sleepPref:"Night", sleepSense:"Light Sleeper", personality:"Extrovert", livingHabit:"Organized", noiseTolerance:"Quiet", guestPolicy:"No Guests", verified:true, compatibilityScore:9.2 },
@@ -348,7 +349,7 @@
       const formData = new URLSearchParams();
       formData.append('username', 'user0@example.com');
       formData.append('password', 'pass123');
-      const res = await fetch('http://localhost:8000/api/v1/auth/login', {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData
@@ -366,7 +367,7 @@
     if(authToken) {
       // Fetch profile after login
       try {
-        const res = await fetch('http://localhost:8000/api/v1/users/me', {
+        const res = await fetch(`${API_URL}/users/me`, {
           headers: { 'Authorization': 'Bearer ' + authToken }
         });
         currentUser = await res.json();
@@ -489,7 +490,7 @@
     grid.innerHTML = '<div style="margin-top:100px; text-align:center"><i class="fas fa-spinner fa-spin fa-3x" style="color:var(--primary)"></i><p style="margin-top:20px; font-weight:700">Groq AI is personalizing your deck...</p></div>';
     if(!authToken) await authenticate();
     try {
-      const res = await fetch('http://localhost:8000/api/v1/matches', { headers: { 'Authorization': 'Bearer ' + authToken } });
+      const res = await fetch(`${API_URL}/matches`, { headers: { 'Authorization': 'Bearer ' + authToken } });
       const data = await res.json();
       matchesForSwipe = data.matches.map(m => ({
         id: m.user.id, name: m.user.name, age: m.user.age, occupation: m.user.occupation,
@@ -610,7 +611,7 @@
     // Sync with backend API
     try {
       if(!authToken) await authenticate();
-      const res = await fetch('http://localhost:8000/api/v1/matches/swipe', {
+      const res = await fetch(`${API_URL}/matches/swipe`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -669,7 +670,7 @@
     };
     
     await authenticate();
-    const res = await fetch('http://localhost:8000/api/v1/users/update', {
+    const res = await fetch(`${API_URL}/users/update`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
       body: JSON.stringify({ 

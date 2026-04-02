@@ -11,7 +11,6 @@ Architecture:
 """
 import numpy as np
 import httpx
-from sklearn.metrics.pairwise import cosine_similarity
 from app.models.user import Preference, User
 from app.config import settings
 
@@ -32,8 +31,8 @@ def get_ml_score(u1_pref: Preference, u2_pref: Preference) -> float:
     Returns:
         Float between 0.0 (no similarity) and 1.0 (identical preferences).
     """
-    def encode(p: Preference) -> list:
-        return [
+    def encode(p: Preference) -> np.ndarray:
+        return np.array([
             1 if p.sleep_pref == "Morning" else 0,
             1 if p.sleep_pref == "Night" else 0,
             1 if p.sleep_pref == "Evening" else 0,
@@ -56,16 +55,19 @@ def get_ml_score(u1_pref: Preference, u2_pref: Preference) -> float:
             1 if p.smoking_habit == "Smoker" else 0,
             1 if p.ac_usage == "Always On" else 0,
             1 if p.ac_usage == "Eco-friendly" else 0,
-        ]
+        ])
         
-    vec1 = np.array(encode(u1_pref)).reshape(1, -1)
-    vec2 = np.array(encode(u2_pref)).reshape(1, -1)
+    vec1 = encode(u1_pref)
+    vec2 = encode(u2_pref)
     
     # Handle zero vectors to avoid division by zero
-    if not np.any(vec1) or not np.any(vec2):
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+    
+    if norm1 == 0 or norm2 == 0:
         return 0.0
         
-    sim = cosine_similarity(vec1, vec2)[0][0]
+    sim = np.dot(vec1, vec2) / (norm1 * norm2)
     return float(sim)
 
 
