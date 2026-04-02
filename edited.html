@@ -129,20 +129,39 @@
     }
 
     /* Swipe Deck & Interactions */
-    #allMatchesGrid { display: flex; justify-content: center; min-height: 600px; perspective: 2000px; }
+    #allMatchesGrid { 
+      position: relative;
+      height: 600px;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      perspective: 1000px;
+    }
 
     .swipe-card {
-      width: 100%; max-width: 500px;
-      transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-      cursor: grab; transform-style: preserve-3d;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.5s;
+      cursor: grab;
+      user-select: none;
     }
     .swipe-card:active { cursor: grabbing; }
+
+    /* Stack layering */
+    .swipe-card:nth-last-child(1) { transform: translateZ(0px); z-index: 3; }
+    .swipe-card:nth-last-child(2) { transform: translateZ(-20px) translateY(10px) scale(0.95); opacity: 0.8; z-index: 2; }
+    .swipe-card:nth-last-child(3) { transform: translateZ(-40px) translateY(20px) scale(0.9); opacity: 0.6; z-index: 1; }
+    .swipe-card:nth-last-child(n+4) { visibility: hidden; }
 
     .card-inner {
       background: white; border-radius: 50px; padding: 40px;
       box-shadow: 0 40px 100px rgba(0,0,0,0.1);
       border: 1px solid rgba(139, 108, 207, 0.1);
       position: relative; overflow: hidden;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
     .card-inner::before {
       content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px;
@@ -216,6 +235,21 @@
       padding: 50px; text-align: center; color: white; width: 100%; max-width: 450px;
       border: 1px solid rgba(255,255,255,0.3);
     }
+    /* Match Overlay */
+    .match-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 3000; color: white; opacity: 0; visibility: hidden; transition: 0.5s;
+    }
+    .match-overlay.active { opacity: 1; visibility: visible; }
+    .match-overlay h1 { font-family: var(--font-display); font-size: 4rem; color: var(--accent); margin-bottom: 20px; }
+
+    .undo-btn {
+      position: absolute; bottom: -60px; right: 0;
+      background: white; border: none; padding: 10px 20px; border-radius: 20px;
+      font-weight: 700; cursor: pointer; color: var(--secondary);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
@@ -228,6 +262,15 @@
     <input type="email" id="loginEmail" value="user0@example.com" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); width:100%; padding:15px; border-radius:15px; color:white; margin-bottom:12px; outline:none">
     <input type="password" id="loginPass" value="pass123" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); width:100%; padding:15px; border-radius:15px; color:white; margin-bottom:25px; outline:none">
     <button onclick="performLogin()" class="btn-primary" style="background:white; color:var(--secondary); width:100%">Access Elite Dashboard</button>
+  </div>
+</div>
+
+<div id="matchOverlay" class="match-overlay">
+  <h1>IT'S A MATCH!</h1>
+  <p style="font-size:1.2rem; opacity:0.8; margin-bottom:40px">You both swiped right on each other. Start a conversation now!</p>
+  <div style="display:flex; gap:20px">
+    <button class="btn-primary" onclick="closeMatchOverlay()">Keep Swiping</button>
+    <button class="btn-outline" style="background:transparent; color:white; border-color:white" onclick="navigateToChat()">Go to Chat</button>
   </div>
 </div>
 
@@ -278,12 +321,27 @@
     { id:4, name:"Bhoomika", age:25, occupation:"Designer", sleepPref:"Evening", sleepSense:"Light Sleeper", personality:"Introvert", livingHabit:"Flexible", noiseTolerance:"Quiet", guestPolicy:"Occasional", verified:true, compatibilityScore:9.5 }
   ];
 
-  let currentUser = { 
-    name: "Jyotasana", age: 24, occupation: "Nurse", 
-    sleepPref: "Night", sleepSense: "Light Sleeper", personality: "Extrovert", 
-    livingHabit: "Organized", noiseTolerance: "Quiet", guestPolicy: "No Guests",
-    food_pref: "Vegetarian", pet_friendly: "Pet-Lover", smoking_habit: "Non-Smoker", ac_usage: "Eco-friendly"
-  };
+  let currentUser = {}; // Will be populated from /api/v1/users/me
+  let lastSwipedCard = null; // For Undo
+
+  function initializePill(groupId, value) {
+    const container = document.getElementById(groupId);
+    if(!container || !value) return;
+    const pills = container.querySelectorAll('.pill');
+    pills.forEach(p => {
+      if(p.innerText.toLowerCase().includes(value.toLowerCase())) p.classList.add('selected');
+      p.onclick = () => {
+        container.querySelectorAll('.pill').forEach(pill => pill.classList.remove('selected'));
+        p.classList.add('selected');
+      };
+    });
+  }
+
+  function getSelectedPillValue(groupId) {
+    const selected = document.querySelector(`#${groupId} .pill.selected`);
+    if (!selected) return null;
+    return selected.dataset.food || selected.dataset.smoking || selected.dataset.ac || selected.dataset.pet || selected.dataset.habit || selected.dataset.sleep;
+  }
 
   async function authenticate() {
     try {
@@ -301,16 +359,27 @@
   }
 
   async function performLogin() {
-    const btn = document.querySelector('.btn-primary');
+    const btn = document.querySelector('#loginOverlay .btn-primary');
     const original = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
     await authenticate();
     if(authToken) {
-      document.getElementById('loginOverlay').style.opacity = '0';
-      setTimeout(() => {
-        document.getElementById('loginOverlay').style.visibility = 'hidden';
-      }, 600);
-      refreshActivePage();
+      // Fetch profile after login
+      try {
+        const res = await fetch('http://localhost:8000/api/v1/users/me', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        currentUser = await res.json();
+        
+        document.getElementById('loginOverlay').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('loginOverlay').style.visibility = 'hidden';
+          refreshActivePage();
+        }, 600);
+      } catch(e) {
+        btn.innerHTML = original;
+        alert('Failed to fetch profile data.');
+      }
     } else {
       btn.innerHTML = original;
       alert('Authentication failed. Please verify the backend is running.');
@@ -340,26 +409,77 @@
       content.innerHTML = `<h1 class="section-title">Elite Match Dashboard</h1><div class="cards-grid" id="topMatchesContainer"></div>`;
       renderTopMatches();
     } else if(p === 'matches') {
-      content.innerHTML = `<h1 class="section-title">Smart AI Shuffle</h1><div id="allMatchesGrid"></div>`;
+      content.innerHTML = `<h1 class="section-title">Smart AI Shuffle</h1><div id="allMatchesGrid"></div>
+      <div style="text-align:center; margin-top:20px">
+        <button class="btn-outline" onclick="undoSwipe()"><i class="fas fa-undo"></i> Undo Swipe</button>
+      </div>`;
       fetchAndRenderMatches();
     } else if(p === 'questionnaire') {
-      content.innerHTML = `<h1 class="section-title">Preference Logic</h1><div style="background:white; padding:40px; border-radius:50px; max-width:600px; box-shadow:0 10px 40px rgba(0,0,0,0.03)">
-        <div style="margin-bottom:25px"><label>Vegetarian / Non-Veg</label><div class="pill-group" id="qFoodGroup"><div class="pill" data-food="Vegetarian">🥗 Veg</div><div class="pill" data-food="Non-Veg">🍗 Non-Veg</div></div></div>
-        <div style="margin-bottom:25px"><label>Smoking Habit</label><div class="pill-group" id="qSmokingGroup"><div class="pill" data-smoking="Non-Smoker">🚭 No</div><div class="pill" data-smoking="Smoker">🚬 Yes</div></div></div>
-        <button class="btn-primary" style="width:100%" onclick="savePreferences()">Sync with AI Engine</button>
+      content.innerHTML = `<h1 class="section-title">Preference Logic</h1><div style="background:white; padding:40px; border-radius:50px; max-width:800px; box-shadow:0 10px 40px rgba(0,0,0,0.03)">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px">
+          <div>
+            <div style="margin-bottom:25px"><label>Vegetarian / Non-Veg</label><div class="pill-group" id="qFoodGroup"><div class="pill" data-food="Vegetarian">🥗 Veg</div><div class="pill" data-food="Non-Veg">🍗 Non-Veg</div></div></div>
+            <div style="margin-bottom:25px"><label>Smoking Habit</label><div class="pill-group" id="qSmokingGroup"><div class="pill" data-smoking="Non-Smoker">🚭 No</div><div class="pill" data-smoking="Smoker">🚬 Yes</div></div></div>
+            <div style="margin-bottom:25px"><label>AC Usage</label><div class="pill-group" id="qAcGroup"><div class="pill" data-ac="Always On">❄️ Always</div><div class="pill" data-ac="Eco-friendly">🍃 Eco</div><div class="pill" data-ac="Night Only">🌙 Night</div></div></div>
+          </div>
+          <div>
+            <div style="margin-bottom:25px"><label>Pet Policy</label><div class="pill-group" id="qPetGroup"><div class="pill" data-pet="Pet-Lover">🐾 Lover</div><div class="pill" data-pet="No Pets">🚫 None</div></div></div>
+            <div style="margin-bottom:25px"><label>Living Habit</label><div class="pill-group" id="qHabitGroup"><div class="pill" data-habit="Organized">📦 Organized</div><div class="pill" data-habit="Flexible">🌀 Flexible</div></div></div>
+            <div style="margin-bottom:25px"><label>Sleep Preference</label><div class="pill-group" id="qSleepGroup"><div class="pill" data-sleep="Morning">🌅 Morning</div><div class="pill" data-sleep="Night">🌙 Night</div></div></div>
+          </div>
+        </div>
+        <button class="btn-primary" style="width:100%; margin-top:20px" onclick="savePreferences()">Sync with AI Engine</button>
       </div>`;
+      
+      // Initialize pills with current user data
+      setTimeout(() => {
+        const p = currentUser.preference || {};
+        initializePill('qFoodGroup', p.food_pref);
+        initializePill('qSmokingGroup', p.smoking_habit);
+        initializePill('qAcGroup', p.ac_usage);
+        initializePill('qPetGroup', p.pet_friendly);
+        initializePill('qHabitGroup', p.living_habit);
+        initializePill('qSleepGroup', p.sleep_pref);
+      }, 0);
     } else if(p === 'messages') {
       content.innerHTML = `<h1 class="section-title">Encrypted Conversations</h1>
-        <div style="background:white; border-radius:40px; padding:40px; box-shadow:0 10px 40px rgba(0,0,0,0.03); text-align:center">
-          <i class="fas fa-comments-alt fa-4x" style="color:var(--primary); margin-bottom:20px"></i>
-          <h3>No active messages yet</h3>
-          <p class="text-muted">Once you match with someone, your conversations will appear here.</p>
+        <div style="display:grid; grid-template-columns:300px 1fr; gap:20px; background:white; border-radius:40px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.03); height:600px">
+          <div style="border-right:1px solid #f1f5f9; padding:20px">
+            <div style="padding:10px; background:#f8fafc; border-radius:15px; margin-bottom:20px"><i class="fas fa-search"></i> Search sisters...</div>
+            <div class="match-card" style="padding:15px; margin-bottom:10px; border-radius:20px; background:rgba(139, 92, 246, 0.05)">
+              <strong>Arpita</strong><p style="font-size:0.8rem; opacity:0.7">Hey! I saw we matches. When are you moving?</p>
+            </div>
+            <div class="match-card" style="padding:15px; margin-bottom:10px; border-radius:20px">
+              <strong>Bhoomika</strong><p style="font-size:0.8rem; opacity:0.7">Liked your vibe!</p>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px">
+            <i class="fas fa-comments-alt fa-4x" style="color:var(--primary); opacity:0.2; margin-bottom:20px"></i>
+            <h3>Select a conversation</h3>
+            <p class="text-muted">Your private messages are end-to-end encrypted for safety.</p>
+          </div>
         </div>`;
     } else if(p === 'community') {
       content.innerHTML = `<h1 class="section-title">Sisterhood Forums</h1>
         <div style="display:grid; gap:20px">
-          <div class="match-card" style="cursor:default"><strong>🏠 Moving to Bangalore: Tips for newcomers</strong><p class="text-muted" style="margin-top:8px">12 Replies · Active now</p></div>
-          <div class="match-card" style="cursor:default"><strong>🛡️ Safety check-in buddy system</strong><p class="text-muted" style="margin-top:8px">42 Replies · Active yesterday</p></div>
+          <div class="match-card" style="cursor:default; border-left:5px solid var(--primary)">
+            <div style="display:flex; justify-content:space-between">
+              <strong>🏠 Moving to Bangalore: Tips for newcomers</strong>
+              <span class="tag" style="background:var(--primary); color:white">HOT</span>
+            </div>
+            <p class="text-muted" style="margin-top:8px">12 Replies · Active now by @Sneha_Loves_Law</p>
+          </div>
+          <div class="match-card" style="cursor:default; border-left:5px solid var(--accent)">
+            <div style="display:flex; justify-content:space-between">
+              <strong>🛡️ Safety check-in buddy system: HSR Layout</strong>
+              <span class="tag">SAFETY</span>
+            </div>
+            <p class="text-muted" style="margin-top:8px">42 Replies · Active yesterday by @VerifyMeAditi</p>
+          </div>
+          <div class="match-card" style="cursor:default">
+            <strong>🍱 Tiffin services in Whitefield?</strong>
+            <p class="text-muted" style="margin-top:8px">5 Replies · Active 2h ago</p>
+          </div>
         </div>`;
     }
   }
@@ -377,48 +497,112 @@
         sleepPref: m.user.preference.sleep_pref, livingHabit: m.user.preference.living_habit
       }));
       currentCardIndex = 0;
-      renderSwipeCard();
+      renderSwipeStack();
     } catch(e) { grid.innerHTML = "Offline simulation: Use Mock Grid"; }
   }
 
-  function renderSwipeCard() {
+  function renderSwipeStack() {
     const grid = document.getElementById('allMatchesGrid');
-    if(currentCardIndex >= matchesForSwipe.length) {
+    grid.innerHTML = '';
+    
+    if (currentCardIndex >= matchesForSwipe.length) {
       grid.innerHTML = '<div style="text-align:center; padding:100px"><i class="fas fa-heart fa-4x" style="color:var(--accent)"></i><h3>You\'ve reached the end!</h3></div>';
       return;
     }
-    const m = matchesForSwipe[currentCardIndex];
-    grid.innerHTML = `
-      <div class="swipe-card" id="activeSwipeCard">
+
+    // Render up to 3 cards for the stack effect
+    for (let i = Math.min(currentCardIndex + 2, matchesForSwipe.length - 1); i >= currentCardIndex; i--) {
+      const m = matchesForSwipe[i];
+      const card = document.createElement('div');
+      card.className = 'swipe-card';
+      card.innerHTML = `
         <div class="card-inner">
           <div style="display:flex; justify-content:space-between">
             <h2 style="font-size:2.4rem; font-family:var(--font-display)">${m.name}, ${m.age}</h2>
             <div class="compatibility-badge">${Math.round(m.compatibilityScore * 10)}%</div>
           </div>
           <div class="progress-bar-container"><div class="progress-bar-fill" style="width:${m.compatibilityScore * 10}%"></div></div>
-          <div class="ai-bubble"><p style="font-style:italic; font-size:1.1rem">"${m.explanation}"</p></div>
+          <div class="ai-bubble" style="flex:1"><p style="font-style:italic; font-size:1.1rem">"${m.explanation}"</p></div>
           <div style="display:flex; gap:10px; margin-top:20px"><div class="tag">${m.occupation}</div><div class="tag">${m.sleepPref} Cycle</div></div>
           <div style="display:flex; justify-content:center; gap:30px; margin-top:50px">
             <div class="btn-outline" style="border-radius:50%; width:80px; height:80px; display:flex; align-items:center; justify-content:center" onclick="handleSwipe('PASS')"><i class="fas fa-times fa-2x"></i></div>
             <div class="btn-primary" style="border-radius:50%; width:80px; height:80px; display:flex; align-items:center; justify-content:center" onclick="handleSwipe('LIKE')"><i class="fas fa-heart fa-2x"></i></div>
           </div>
         </div>
-      </div>
-    `;
+      `;
+      
+      if (i === currentCardIndex) {
+        initDrag(card);
+      }
+      grid.appendChild(card);
+    }
+  }
 
-    const card = document.getElementById('activeSwipeCard');
-    card.addEventListener('mousemove', (e) => {
-      const rect = card.getBoundingClientRect();
-      const dx = (e.clientX - (rect.left + rect.width/2)) / 25;
-      const dy = (e.clientY - (rect.top + rect.height/2)) / 25;
-      card.style.transform = `rotateY(${dx}deg) rotateX(${-dy}deg) scale(1.02)`;
+  function initDrag(card) {
+    let startX = 0;
+    let currentX = 0;
+    
+    card.addEventListener('mousedown', (e) => {
+      startX = e.clientX;
+      card.style.transition = 'none';
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
     });
-    card.addEventListener('mouseleave', () => card.style.transform = `rotateY(0) rotateX(0) scale(1)`);
+
+    card.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      card.style.transition = 'none';
+      document.addEventListener('touchmove', onTouchMove);
+      document.addEventListener('touchend', onTouchEnd);
+    });
+
+    function onMouseMove(e) {
+      currentX = e.clientX - startX;
+      updateCardTransform();
+    }
+
+    function onTouchMove(e) {
+      currentX = e.touches[0].clientX - startX;
+      updateCardTransform();
+    }
+
+    function updateCardTransform() {
+      const rotation = currentX / 20;
+      card.style.transform = `translateX(${currentX}px) rotate(${rotation}deg)`;
+      
+      // Visual feedback via opacity or background color can be added here
+    }
+
+    function onMouseUp() {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      finalizeSwipe();
+    }
+
+    function onTouchEnd() {
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+      finalizeSwipe();
+    }
+
+    function finalizeSwipe() {
+      card.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+      if (currentX > 150) {
+        handleSwipe('LIKE');
+      } else if (currentX < -150) {
+        handleSwipe('PASS');
+      } else {
+        card.style.transform = 'translateX(0) rotate(0)';
+      }
+      currentX = 0;
+    }
   }
 
   async function handleSwipe(action) {
-    const card = document.getElementById('activeSwipeCard');
+    const cards = document.querySelectorAll('.swipe-card');
+    const card = cards[cards.length - 1]; // Top-most card is the last child
     if(!card) return;
+    
     const m = matchesForSwipe[currentCardIndex];
     card.style.transform = `translateX(${action==='LIKE'?1000:-1000}px) rotate(${action==='LIKE'?30:-30}deg)`;
     card.style.opacity = '0';
@@ -426,7 +610,7 @@
     // Sync with backend API
     try {
       if(!authToken) await authenticate();
-      await fetch('http://localhost:8000/api/v1/matches/swipe', {
+      const res = await fetch('http://localhost:8000/api/v1/matches/swipe', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -434,10 +618,27 @@
         },
         body: JSON.stringify({ target_id: m.id, action: action })
       });
+      const data = await res.json();
+      if (data.mutual_match) {
+        showMatchOverlay();
+      }
     } catch(e) { console.warn('Swipe sync failed', e); }
 
     currentCardIndex++;
-    setTimeout(renderSwipeCard, 500);
+    setTimeout(renderSwipeStack, 500);
+  }
+
+  function showMatchOverlay() {
+    document.getElementById('matchOverlay').classList.add('active');
+  }
+
+  function closeMatchOverlay() {
+    document.getElementById('matchOverlay').classList.remove('active');
+  }
+
+  function navigateToChat() {
+    closeMatchOverlay();
+    document.querySelector('[data-page="messages"]').click();
   }
 
   function renderTopMatches() {
@@ -458,21 +659,37 @@
   }
 
   async function savePreferences() {
+    const prefs = {
+      food_pref: getSelectedPillValue('qFoodGroup'),
+      smoking_habit: getSelectedPillValue('qSmokingGroup'),
+      ac_usage: getSelectedPillValue('qAcGroup'),
+      pet_friendly: getSelectedPillValue('qPetGroup'),
+      living_habit: getSelectedPillValue('qHabitGroup'),
+      sleep_pref: getSelectedPillValue('qSleepGroup')
+    };
+    
     await authenticate();
-    await fetch('http://localhost:8000/api/v1/users/update', {
+    const res = await fetch('http://localhost:8000/api/v1/users/update', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
       body: JSON.stringify({ 
-        name: currentUser.name, age: currentUser.age, occupation: currentUser.occupation,
-        preferences: { 
-          sleep_pref: currentUser.sleepPref, living_habit: currentUser.livingHabit,
-          food_pref: currentUser.food_pref, smoking_habit: currentUser.smoking_habit 
-        } 
+        preferences: prefs 
       })
     });
+    currentUser = await res.json();
     alert("✨ Preferences synchronized with Groq AI.");
     matchesForSwipe = [];
     refreshActivePage();
+  }
+
+  function undoSwipe() {
+    if (currentCardIndex > 0) {
+      currentCardIndex--;
+      renderSwipeStack();
+      alert("Undo successful. Swiping back...");
+    } else {
+      alert("No previous swipe to undo.");
+    }
   }
 
   function refreshActivePage() {
