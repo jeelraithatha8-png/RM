@@ -262,6 +262,7 @@
     <input type="email" id="loginEmail" value="user0@example.com" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); width:100%; padding:15px; border-radius:15px; color:white; margin-bottom:12px; outline:none">
     <input type="password" id="loginPass" value="pass123" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); width:100%; padding:15px; border-radius:15px; color:white; margin-bottom:25px; outline:none">
     <button onclick="performLogin()" class="btn-primary" style="background:white; color:var(--secondary); width:100%">Access Elite Dashboard</button>
+    <div id="backendStatus" style="margin-top:20px; font-size:0.75rem; opacity:0.6;"><i class="fas fa-circle-notch fa-spin"></i> Checking backend status...</div>
   </div>
 </div>
 
@@ -363,13 +364,17 @@
     const btn = document.querySelector('#loginOverlay .btn-primary');
     const original = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
-    await authenticate();
-    if(authToken) {
-      // Fetch profile after login
-      try {
+    
+    try {
+      await authenticate();
+      if(authToken) {
+        // Fetch profile after login
         const res = await fetch(`${API_URL}/users/me`, {
           headers: { 'Authorization': 'Bearer ' + authToken }
         });
+        
+        if (!res.ok) throw new Error('Profile fetch failed');
+        
         currentUser = await res.json();
         
         document.getElementById('loginOverlay').style.opacity = '0';
@@ -377,15 +382,34 @@
           document.getElementById('loginOverlay').style.visibility = 'hidden';
           refreshActivePage();
         }, 600);
-      } catch(e) {
+      } else {
         btn.innerHTML = original;
-        alert('Failed to fetch profile data.');
+        alert('Authentication failed: Invalid email or password. Please use user0@example.com / pass123');
       }
-    } else {
+    } catch(e) {
       btn.innerHTML = original;
-      alert('Authentication failed. Please verify the backend is running.');
+      alert('Connection error: The backend API is not responding. Please ensure your Vercel deployment is active and verify the /api endpoint.');
     }
   }
+
+  // Check backend health on load
+  async function checkBackendHealth() {
+    const statusDiv = document.getElementById('backendStatus');
+    try {
+      const res = await fetch(`${API_URL.replace('/api/v1', '')}/health`);
+      if (res.ok) {
+        statusDiv.innerHTML = '<i class="fas fa-check-circle" style="color:#4ade80"></i> Backend Online';
+        statusDiv.style.opacity = '1';
+      } else {
+        throw new Error();
+      }
+    } catch(e) {
+      statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#fb7185"></i> Backend Unreachable';
+      statusDiv.style.opacity = '1';
+    }
+  }
+  
+  checkBackendHealth();
 
   function makePillGroup(groupId, userKey, optionsMap) {
     const container = document.getElementById(groupId);

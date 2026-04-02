@@ -28,15 +28,23 @@ from app.routes.matches import router as match_router
 from app.routes.chat import router as chat_router
 from app.routes.safety import router as safety_router
 
+from app.utils.seed import seed_data
+from app.database import AsyncSessionLocal
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Application lifecycle manager.
-    Creates database tables on startup and disposes the engine on shutdown.
+    Creates database tables on startup, seeds demo data, and disposes the engine on shutdown.
     """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    # Run seeding logic
+    async with AsyncSessionLocal() as session:
+        await seed_data(session)
+        
     yield
     await engine.dispose()
 
