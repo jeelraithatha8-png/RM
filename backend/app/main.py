@@ -45,7 +45,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     version="1.0.0",
     description=(
-        "Backend API for **Nest & Found**: A Women-Only Roommate Matching System.\n\n"
+        "Backend API for **Roommate Matching System**: A Women-Only Personalized Living Platform.\n\n"
         "Features:\n"
         "- 🤖 Hybrid Rule-Based + ML (Cosine Similarity) matching engine\n"
         "- 🔐 JWT authentication with bcrypt password hashing\n"

@@ -8,6 +8,11 @@ class PreferenceBase(BaseModel):
     living_habit: Optional[str] = None
     noise_tolerance: Optional[str] = None
     guest_policy: Optional[str] = None
+    food_pref: Optional[str] = None
+    pet_friendly: Optional[str] = None
+    smoking_habit: Optional[str] = None
+    ac_usage: Optional[str] = None
+
 
 class PreferenceCreate(PreferenceBase):
     pass

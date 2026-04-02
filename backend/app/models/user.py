@@ -42,5 +42,14 @@ class Preference(Base):
     noise_tolerance = Column(String(50))
     # Values: "No Guests", "Occasional", "Male Allowed"
     guest_policy = Column(String(50))
+    # Values: "Vegetarian", "Non-Veg", "Vegan"
+    food_pref = Column(String(50))
+    # Values: "Pet-Lover", "No Pets", "Allergic"
+    pet_friendly = Column(String(50))
+    # Values: "Non-Smoker", "Smoker", "Occasional"
+    smoking_habit = Column(String(50))
+    # Values: "Always On", "Night Only", "Eco-friendly"
+    ac_usage = Column(String(50))
+
 
     user = relationship("User", back_populates="preference")

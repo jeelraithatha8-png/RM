@@ -9,3 +9,8 @@ class MatchResult(BaseModel):
 
 class MatchListResponse(BaseModel):
     matches: List[MatchResult]
+
+class SwipeActionRequest(BaseModel):
+    target_id: int
+    action: str  # "LIKE" or "PASS"
+

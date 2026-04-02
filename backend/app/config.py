@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field(default="supersecretkey_please_change_in_production")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     ALGORITHM: str = "HS256"
+    GROQ_API_KEY: str | None = None
+
 
     # Database
     DATABASE_URL: str = Field(default_factory=_default_db_url)

@@ -10,8 +10,10 @@ Architecture:
   - Final: Combined score mapped to 0-10 scale with tier labeling
 """
 import numpy as np
+import httpx
 from sklearn.metrics.pairwise import cosine_similarity
 from app.models.user import Preference, User
+from app.config import settings
 
 
 # Compatibility tier thresholds
@@ -46,6 +48,14 @@ def get_ml_score(u1_pref: Preference, u2_pref: Preference) -> float:
             1 if p.living_habit == "Flexible" else 0,
             1 if p.sleep_sense == "Light Sleeper" else 0,
             1 if p.sleep_sense == "Heavy Sleeper" else 0,
+            1 if p.food_pref == "Vegetarian" else 0,
+            1 if p.food_pref == "Non-Veg" else 0,
+            1 if p.pet_friendly == "Pet-Lover" else 0,
+            1 if p.pet_friendly == "No Pets" else 0,
+            1 if p.smoking_habit == "Non-Smoker" else 0,
+            1 if p.smoking_habit == "Smoker" else 0,
+            1 if p.ac_usage == "Always On" else 0,
+            1 if p.ac_usage == "Eco-friendly" else 0,
         ]
         
     vec1 = np.array(encode(u1_pref)).reshape(1, -1)
@@ -71,7 +81,7 @@ def get_compatibility_tier(score: float) -> str:
         return "Low Match"
 
 
-def generate_explanation(u1: Preference, u2: Preference, score: float) -> str:
+def generate_basic_explanation(u1: Preference, u2: Preference, score: float) -> str:
     """
     Generate a human-readable explanation of why two users are compatible.
     Lists shared preferences and includes the compatibility tier.
@@ -111,6 +121,38 @@ def generate_explanation(u1: Preference, u2: Preference, score: float) -> str:
     
     return f"{tier} — Complementary lifestyle match."
 
+def generate_explanation(u1: Preference, u2: Preference, score: float) -> str:
+    """Generate dynamic explanation using Groq AI if key is set, else fallback to basic."""
+    basic_exp = generate_basic_explanation(u1, u2, score)
+    if not settings.GROQ_API_KEY:
+        return basic_exp
+        
+    try:
+        prompt = (
+            f"You are a dating/roommate app AI. User 1: {u1.sleep_pref} sleeper, {u1.noise_tolerance} noise, {u1.living_habit} living, {u1.food_pref} food, {u1.smoking_habit} smoking, {u1.pet_friendly} pet attitude. "
+            f"User 2: {u2.sleep_pref} sleeper, {u2.noise_tolerance} noise, {u2.living_habit} living, {u2.food_pref} food, {u2.smoking_habit} smoking, {u2.pet_friendly} pet attitude. "
+            f"Compatibility score: {score}/10. "
+            f"Write a short, punchy 1-sentence Tinder-style explanation of why they are a match. Focus on their shared lifestyle or complementary habits. Don't use quotes."
+        )
+        response = httpx.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
+            json={
+                "model": "llama3-8b-8192",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 60,
+                "temperature": 0.7
+            },
+            timeout=3.0
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return data["choices"][0]["message"]["content"].strip()
+    except Exception:
+        pass
+        
+    return basic_exp
+
 
 def calculate_compatibility(current_user: User, candidate_user: User):
     """
@@ -128,7 +170,7 @@ def calculate_compatibility(current_user: User, candidate_user: User):
         
     # Rule-Based Score
     rule_score = 0
-    max_rule_score = 25  # 3×5 + 2×3 + 1×1 + Age(up to 3) = 25
+    max_rule_score = 41 # (5*5=25) + (4*3=12) + (1*1=1) + Age(3) = 41
     
     # High Weight (5 points each) — non-negotiables
     if current_pref.sleep_pref == candidate_pref.sleep_pref:
@@ -137,11 +179,19 @@ def calculate_compatibility(current_user: User, candidate_user: User):
         rule_score += 5
     if current_pref.noise_tolerance == candidate_pref.noise_tolerance:
         rule_score += 5
+    if current_pref.food_pref == candidate_pref.food_pref:
+        rule_score += 5
+    if current_pref.smoking_habit == candidate_pref.smoking_habit:
+        rule_score += 5
     
     # Medium Weight (3 points each) — lifestyle
     if current_pref.personality == candidate_pref.personality:
         rule_score += 3
     if current_pref.living_habit == candidate_pref.living_habit:
+        rule_score += 3
+    if current_pref.pet_friendly == candidate_pref.pet_friendly:
+        rule_score += 3
+    if current_pref.ac_usage == candidate_pref.ac_usage:
         rule_score += 3
     
     # Low Weight (1 point) — minor

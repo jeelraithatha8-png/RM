@@ -13,7 +13,8 @@ import json
 
 from app.database import get_db, get_redis
 from app.models.user import User, Preference
-from app.schemas.match import MatchListResponse
+from app.models.interaction import Swipe
+from app.schemas.match import MatchListResponse, SwipeActionRequest
 from app.utils.security import get_current_user
 from app.recommender.engine import calculate_compatibility
 
@@ -53,8 +54,14 @@ async def fetch_and_calculate_matches(
     # Resolve filter alias
     resolved_filter = FILTER_ALIASES.get(filter_type, filter_type)
 
-    # Fetch candidates (exclude self)
+    # Fetch users already swiped on by current_user
+    swiped_result = await db.execute(select(Swipe.target_id).filter(Swipe.user_id == current_user.id))
+    swiped_ids = [row[0] for row in swiped_result.all()]
+
+    # Fetch candidates (exclude self and already swiped)
     stmt = select(User).options(selectinload(User.preference)).filter(User.id != current_user.id)
+    if swiped_ids:
+        stmt = stmt.filter(User.id.not_in(swiped_ids))
     
     # SQL-level filtering for verified
     if resolved_filter == "verified":
@@ -136,3 +143,38 @@ async def get_filtered_matches(
     """Get matches filtered by a specific criteria."""
     matches = await fetch_and_calculate_matches(current_user, db, limit=20, filter_type=type)
     return {"matches": matches}
+
+@router.post("/swipe")
+async def record_swipe(
+    swipe_data: SwipeActionRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Record a user swipe (LIKE or PASS) and return whether it's a mutual match."""
+    from fastapi import HTTPException
+    
+    # Check if target exists
+    target_result = await db.execute(select(User).filter(User.id == swipe_data.target_id))
+    if not target_result.scalars().first():
+        raise HTTPException(status_code=404, detail="Target user not found")
+
+    new_swipe = Swipe(
+        user_id=current_user.id,
+        target_id=swipe_data.target_id,
+        action=swipe_data.action
+    )
+    db.add(new_swipe)
+    
+    mutual_match = False
+    if swipe_data.action == "LIKE":
+        # Check if the target also liked the current user
+        reciprocal = await db.execute(select(Swipe).filter(
+            Swipe.user_id == swipe_data.target_id,
+            Swipe.target_id == current_user.id,
+            Swipe.action == "LIKE"
+        ))
+        if reciprocal.scalars().first():
+            mutual_match = True
+            
+    await db.commit()
+    return {"status": "success", "mutual_match": mutual_match}
