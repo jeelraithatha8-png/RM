@@ -82,12 +82,6 @@ cd backend
 python seed_db.py
 ```
 
-<<<<<<< HEAD
----
-
-## 📄 License
-Academic Capstone Project — 2026.
-Developed by **Anand** with focus on Women's Safety & AI Innovation.
 =======
 This spins up:
 - **FastAPI** on http://localhost:8000
@@ -113,4 +107,4 @@ The project is configured for **Vercel** serverless deployment:
 
 ---
 
->>>>>>> e725b08d7b7d46987761c96f60c81e1e0fcccc05
+
