@@ -82,8 +82,35 @@ cd backend
 python seed_db.py
 ```
 
+<<<<<<< HEAD
 ---
 
 ## 📄 License
 Academic Capstone Project — 2026.
 Developed by **Anand** with focus on Women's Safety & AI Innovation.
+=======
+This spins up:
+- **FastAPI** on http://localhost:8000
+- **PostgreSQL** on localhost:5432
+- **Redis** on localhost:6379
+
+---
+
+## 🌐 Vercel Deployment
+
+The project is configured for **Vercel** serverless deployment:
+- Backend runs as a Python serverless function (`@vercel/python`)
+- Frontend served as static HTML (`@vercel/static`)
+- SQLite database stored in `/tmp/` (ephemeral per cold start)
+
+---
+
+## 👥 Team
+
+| Name | Role |
+|------|------|
+| Anand | Fun-Stack Developer |
+
+---
+
+>>>>>>> e725b08d7b7d46987761c96f60c81e1e0fcccc05

@@ -301,11 +301,19 @@
   }
 
   async function performLogin() {
+    const btn = document.querySelector('.btn-primary');
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
     await authenticate();
     if(authToken) {
       document.getElementById('loginOverlay').style.opacity = '0';
-      document.getElementById('loginOverlay').style.visibility = 'hidden';
+      setTimeout(() => {
+        document.getElementById('loginOverlay').style.visibility = 'hidden';
+      }, 600);
       refreshActivePage();
+    } else {
+      btn.innerHTML = original;
+      alert('Authentication failed. Please verify the backend is running.');
     }
   }
 
@@ -340,8 +348,19 @@
         <div style="margin-bottom:25px"><label>Smoking Habit</label><div class="pill-group" id="qSmokingGroup"><div class="pill" data-smoking="Non-Smoker">🚭 No</div><div class="pill" data-smoking="Smoker">🚬 Yes</div></div></div>
         <button class="btn-primary" style="width:100%" onclick="savePreferences()">Sync with AI Engine</button>
       </div>`;
-      makePillGroup('qFoodGroup', 'food_pref', { food: 'food_pref' });
-      makePillGroup('qSmokingGroup', 'smoking_habit', { smoking: 'smoking_habit' });
+    } else if(p === 'messages') {
+      content.innerHTML = `<h1 class="section-title">Encrypted Conversations</h1>
+        <div style="background:white; border-radius:40px; padding:40px; box-shadow:0 10px 40px rgba(0,0,0,0.03); text-align:center">
+          <i class="fas fa-comments-alt fa-4x" style="color:var(--primary); margin-bottom:20px"></i>
+          <h3>No active messages yet</h3>
+          <p class="text-muted">Once you match with someone, your conversations will appear here.</p>
+        </div>`;
+    } else if(p === 'community') {
+      content.innerHTML = `<h1 class="section-title">Sisterhood Forums</h1>
+        <div style="display:grid; gap:20px">
+          <div class="match-card" style="cursor:default"><strong>🏠 Moving to Bangalore: Tips for newcomers</strong><p class="text-muted" style="margin-top:8px">12 Replies · Active now</p></div>
+          <div class="match-card" style="cursor:default"><strong>🛡️ Safety check-in buddy system</strong><p class="text-muted" style="margin-top:8px">42 Replies · Active yesterday</p></div>
+        </div>`;
     }
   }
 
@@ -397,10 +416,26 @@
     card.addEventListener('mouseleave', () => card.style.transform = `rotateY(0) rotateX(0) scale(1)`);
   }
 
-  function handleSwipe(action) {
+  async function handleSwipe(action) {
     const card = document.getElementById('activeSwipeCard');
+    if(!card) return;
+    const m = matchesForSwipe[currentCardIndex];
     card.style.transform = `translateX(${action==='LIKE'?1000:-1000}px) rotate(${action==='LIKE'?30:-30}deg)`;
     card.style.opacity = '0';
+    
+    // Sync with backend API
+    try {
+      if(!authToken) await authenticate();
+      await fetch('http://localhost:8000/api/v1/matches/swipe', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + authToken
+        },
+        body: JSON.stringify({ target_id: m.id, action: action })
+      });
+    } catch(e) { console.warn('Swipe sync failed', e); }
+
     currentCardIndex++;
     setTimeout(renderSwipeCard, 500);
   }
@@ -452,6 +487,10 @@
     makePillGroup('habitsGroup', 'livingHabit', { habit: 'livingHabit' });
   });
   document.getElementById('closeModalBtn').addEventListener('click', () => {
+    // Capture values from inputs
+    currentUser.name = document.getElementById('profileName').value;
+    currentUser.age = parseInt(document.getElementById('profileAge').value) || 24;
+    
     modal.style.visibility = 'hidden'; modal.style.opacity = '0';
     savePreferences();
   });
