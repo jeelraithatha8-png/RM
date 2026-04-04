@@ -22,11 +22,28 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
+_db_initialized = False
+
 async def get_db():
     """
     FastAPI dependency that yields an async database session.
     Automatically closes the session when the request completes.
+    Also initializes the DB tables and seeds data on the first request 
+    if running in a serverless environment like Vercel where lifespan is ignored.
     """
+    global _db_initialized
+    if not _db_initialized:
+        from app.models.base import Base
+        from app.utils.seed import seed_data
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            async with AsyncSessionLocal() as session:
+                await seed_data(session)
+        except Exception as e:
+            print("DB init error:", e)
+        _db_initialized = True
+
     async with AsyncSessionLocal() as session:
         yield session
 
