@@ -1,5 +1,5 @@
 fastapi[standard]>=0.110.0
-SQLAlchemy>=2.0.0
+SQLAlchemy>=2.0.36
 aiosqlite>=0.20.0
 alembic>=1.13.0
 pydantic>=2.9.0
