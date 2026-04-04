@@ -22,42 +22,46 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-_db_initialized = False
+async def init_db():
+    """
+    Initializes the database:
+    1. On Vercel, copies the seed DB to /tmp for write access.
+    2. Runs SQLAlchemy metadata creation.
+    3. Seeds demo data if missing.
+    """
+    import os
+    import shutil
+    from app.models.base import Base
+    from app.models.user import User
+    from app.utils.seed import seed_data
+    
+    try:
+        if os.environ.get("VERCEL"):
+            tmp_db = "/tmp/nestfound.db"
+            # Locate relative to this file
+            local_db = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nestfound.db")
+            
+            # Solid copy logic: only copy if target missing or invalid
+            if not os.path.exists(tmp_db) or os.path.getsize(tmp_db) == 0:
+                if os.path.exists(local_db):
+                    shutil.copy2(local_db, tmp_db)
+                    print(f"📦 Successfully copied seed DB to {tmp_db} ({os.path.getsize(tmp_db)} bytes)")
+                else:
+                    print(f"⚠️ Seed DB not found at {local_db}, will create fresh.")
+
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            
+        async with AsyncSessionLocal() as session:
+            await seed_data(session)
+        print("✅ Database initialized and synchronized.")
+    except Exception as e:
+        print(f"❌ DB init error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
 
 async def get_db():
-    global _db_initialized
-    if not _db_initialized:
-        import os
-        import shutil
-        from app.models.base import Base
-        from app.models.user import User, Preference
-        from app.utils.seed import seed_data
-        
-        try:
-            if os.environ.get("VERCEL"):
-                tmp_db = "/tmp/nestfound.db"
-                # Locate relative to this file
-                local_db = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nestfound.db")
-                
-                # Solid copy logic: only copy if target missing or invalid
-                if not os.path.exists(tmp_db) or os.path.getsize(tmp_db) == 0:
-                    if os.path.exists(local_db):
-                        shutil.copy2(local_db, tmp_db)
-                        print(f"📦 Successfully copied seed DB to {tmp_db} ({os.path.getsize(tmp_db)} bytes)")
-                    else:
-                        print(f"⚠️ Seed DB not found at {local_db}, will create fresh.")
-
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-            async with AsyncSessionLocal() as session:
-                await seed_data(session)
-            print("✅ Database initialized and synchronized.")
-        except Exception as e:
-            print(f"❌ DB init error: {str(e)}")
-            import traceback
-            traceback.print_exc()
-        _db_initialized = True
-
     async with AsyncSessionLocal() as session:
         yield session
 

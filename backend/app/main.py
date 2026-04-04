@@ -18,7 +18,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.database import engine
+from app.database import engine, init_db
 from app.models.base import Base
 
 # Routers
@@ -28,7 +28,6 @@ from app.routes.matches import router as match_router
 from app.routes.chat import router as chat_router
 from app.routes.safety import router as safety_router
 
-from app.utils.seed import seed_data
 from app.database import AsyncSessionLocal
 
 
@@ -36,15 +35,9 @@ from app.database import AsyncSessionLocal
 async def lifespan(app: FastAPI):
     """
     Application lifecycle manager.
-    Creates database tables on startup, seeds demo data, and disposes the engine on shutdown.
+    Handles database initialization and cleanup.
     """
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
-    # Run seeding logic
-    async with AsyncSessionLocal() as session:
-        await seed_data(session)
-        
+    await init_db()
     yield
     await engine.dispose()
 
@@ -108,3 +101,9 @@ def read_root():
 def health_check():
     """Health check endpoint for monitoring and deployment verification."""
     return {"status": "ok"}
+
+
+@app.get(f"{settings.API_V1_STR}/health", tags=["Health"])
+def api_health_check():
+    """API-prefixed health check to match frontend expectations."""
+    return {"status": "ok", "version": "1.0.0"}
