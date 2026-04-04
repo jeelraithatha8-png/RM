@@ -228,7 +228,7 @@
     #loginOverlay {
       position: fixed; inset: 0; z-index: 9999;
       display: flex; align-items: center; justify-content: center;
-      transition: opacity 0.6s cubic-bezier(0.23,1,0.32,1), visibility 0.6s;
+      transition: opacity 0.2s cubic-bezier(0.23,1,0.32,1), visibility 0.2s;
       overflow: hidden;
     }
     #loginOverlay::before {
@@ -379,7 +379,7 @@
     <div style="text-align:center; margin-bottom:8px">
       <span style="font-size:2.2rem">🏠</span>
     </div>
-    <div class="auth-logo" style="text-align:center">Nest &amp; Found</div>
+    <div class="auth-logo" style="text-align:center">Roommate Matching</div>
     <div class="auth-tagline" style="text-align:center">Premium Safe Living for Sisters</div>
 
     <!-- Tabs -->
@@ -586,7 +586,7 @@
         setTimeout(() => {
           document.getElementById('loginOverlay').style.visibility = 'hidden';
           refreshActivePage();
-        }, 600);
+        }, 200);
       } else {
         btn.innerHTML = original;
         showError('login', 'Invalid email or password.');

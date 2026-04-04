@@ -34,6 +34,7 @@ async def get_db():
     global _db_initialized
     if not _db_initialized:
         from app.models.base import Base
+        from app.models.user import User, Preference
         from app.utils.seed import seed_data
         try:
             async with engine.begin() as conn:
