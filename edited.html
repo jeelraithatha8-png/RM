@@ -264,9 +264,19 @@
       border: 1px solid rgba(255,255,255,0.18);
       border-radius: 30px;
       padding: 48px 44px 44px;
-      width: 100%; max-width: 460px;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+      width: 100%; max-width: 440px;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
       color: white;
+      animation: cardAppear 0.8s cubic-bezier(0.23,1,0.32,1) backwards;
+    }
+    @keyframes cardAppear {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .auth-card::after {
+      content: ''; position: absolute; inset: 0; border-radius: 30px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      pointer-events: none;
     }
     .auth-logo {
       font-family: var(--font-display); font-size: 1.7rem; font-weight: 800;
@@ -645,13 +655,13 @@
         // Optionally auto-login
         performLogin();
       } else {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({ detail: 'Unknown server error' }));
         btn.innerHTML = original;
-        showError('register', data.detail || 'Registration failed.');
+        showError('register', data.detail || data.message || 'Registration failed.');
       }
     } catch(e) {
       btn.innerHTML = original;
-      showError('register', 'Backend API error.');
+      showError('register', 'Backend API error: ' + (e.message || 'Connection failed'));
     }
   }
 
@@ -1007,6 +1017,22 @@
   }));
 
   renderPage('dashboard');
+
+  // Backend Health Check
+  async function checkBackend() {
+    const el = document.getElementById('authBackendStatus');
+    try {
+      const res = await fetch(`${API_URL}/health`);
+      if (res.ok) {
+        el.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981"></i> Backend Online';
+      } else {
+        el.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#f87171"></i> Backend Issue (' + res.status + ')';
+      }
+    } catch(e) {
+      el.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#f87171"></i> Backend Connection Error';
+    }
+  }
+  checkBackend();
 </script>
 </body>
 </html>

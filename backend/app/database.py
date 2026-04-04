@@ -36,16 +36,26 @@ async def get_db():
         try:
             if os.environ.get("VERCEL"):
                 tmp_db = "/tmp/nestfound.db"
+                # Locate relative to this file
                 local_db = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nestfound.db")
-                if not os.path.exists(tmp_db) and os.path.exists(local_db):
-                    shutil.copy2(local_db, tmp_db)
-                    
+                
+                # Solid copy logic: only copy if target missing or invalid
+                if not os.path.exists(tmp_db) or os.path.getsize(tmp_db) == 0:
+                    if os.path.exists(local_db):
+                        shutil.copy2(local_db, tmp_db)
+                        print(f"📦 Successfully copied seed DB to {tmp_db} ({os.path.getsize(tmp_db)} bytes)")
+                    else:
+                        print(f"⚠️ Seed DB not found at {local_db}, will create fresh.")
+
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
             async with AsyncSessionLocal() as session:
                 await seed_data(session)
+            print("✅ Database initialized and synchronized.")
         except Exception as e:
-            print("DB init error:", e)
+            print(f"❌ DB init error: {str(e)}")
+            import traceback
+            traceback.print_exc()
         _db_initialized = True
 
     async with AsyncSessionLocal() as session:
