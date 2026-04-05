@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Nest & Found | Premium Women-Only Roommate Matching</title>
+  <title>Roommate Matching | Smart Women-Only Housing</title>
   <!-- Font Awesome 6 Pro (free icons) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- Google Fonts -->
@@ -103,6 +103,39 @@
       font-weight: 500;
     }
 
+    .ai-bubble::after {
+      content: "AI INSIGHT"; position: absolute; top: -10px; left: 25px;
+      background: var(--primary); color: white; padding: 2px 12px; border-radius: 10px;
+      font-size: 0.6rem; font-weight: 900;
+    }
+    
+    /* Floating Undo Button */
+    .undo-float-btn {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border: 2px solid #e5d9fc;
+      padding: 12px 30px;
+      border-radius: 50px;
+      box-shadow: 0 10px 30px rgba(108, 71, 194, 0.15);
+      color: #6c47c2;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    .undo-float-btn:hover {
+      transform: translateX(-50%) translateY(-5px);
+      box-shadow: 0 15px 40px rgba(108, 71, 194, 0.25);
+      background: #fdfbff;
+    }
+    .undo-float-btn:active { transform: translateX(-50%) scale(0.95); }
+
     .badge-verified {
       display: flex;
       align-items: center;
@@ -142,18 +175,34 @@
     /* Sidebar - Elegant Glassmorphism */
     .main-layout { display: flex; flex: 1; }
     .sidebar {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(12px);
-      width: 96px;
-      border-right: 1px solid rgba(139, 108, 207, 0.2);
-      padding: 40px 0;
+      width: 100px;
+      background: white;
+      border-right: 1px solid rgba(139, 108, 207, 0.15);
+      padding: 32px 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 36px;
+      gap: 40px;
       position: sticky;
       top: 80px;
       height: calc(100vh - 80px);
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.01);
+    }
+
+    .sidebar-label {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-weight: 800;
+      font-size: 0.9rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      background: linear-gradient(180deg, #6c47c2, #b392e0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 20px;
+      opacity: 0.8;
+      cursor: default;
     }
 
     .nav-item {
@@ -1197,7 +1246,6 @@
     }
   }
 
-  document.getElementById('undoSwipeBtn')?.addEventListener('click', undoSwipe);
 
   async function renderTopMatches() {
     showLoading('topMatchesContainer');
@@ -1296,7 +1344,7 @@
 
     document.getElementById('downloadAgreementLink')?.addEventListener('click', (e) => {
       e.preventDefault();
-      const agreement = `ROOMMATE AGREEMENT — Nest & Found\n${'═'.repeat(45)}\n\nDate: ${new Date().toLocaleDateString()}\nUser: ${curUser.name || 'N/A'}\n\n1. SHARED SPACES: Both parties agree to maintain cleanliness.\n2. GUESTS: Follow the agreed guest policy.\n3. NOISE: Respect quiet hours as per preference.\n4. RENT: Split equally unless otherwise agreed.\n5. COMMUNICATION: Address concerns directly & respectfully.\n6. TERMINATION: 30-day notice required.\n\nSigned digitally via Nest & Found Platform.`;
+      const agreement = `ROOMMATE AGREEMENT — Roommate Matching\n${'═'.repeat(45)}\n\nDate: ${new Date().toLocaleDateString()}\nUser: ${curUser.name || 'N/A'}\n\n1. SHARED SPACES: Both parties agree to maintain cleanliness.\n2. GUESTS: Follow the agreed guest policy.\n3. NOISE: Respect quiet hours as per preference.\n4. RENT: Split equally unless otherwise agreed.\n5. COMMUNICATION: Address concerns directly & respectfully.\n6. TERMINATION: 30-day notice required.\n\nSigned digitally via Roommate Matching Platform.`;
       const blob = new Blob([agreement], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1330,7 +1378,13 @@
     else return;
 
     if (p === 'dashboard') { renderTopMatches(); attachChipListeners(); initDashboardButtons(); }
-    if (p === 'matches') { fetchAndRenderMatches(); }
+    if (p === 'matches') { 
+      fetchAndRenderMatches();
+      // Wire floating undo button after injection
+      setTimeout(() => {
+        document.getElementById('undoSwipeBtn')?.addEventListener('click', undoSwipe);
+      }, 50);
+    }
     if (p === 'messages') { renderChatList(); }
     if (p === 'community') renderCommunity();
     if (p === 'safety') initSafety();
@@ -1353,9 +1407,9 @@
     <div id="matches-page" class="hidden-page">
       <div class="section-title"><i class="fas fa-bolt"></i> Smart Roommate Matches (Swipe Deck)</div>
       <div id="allMatchesGrid" style="margin-top:40px"></div>
-      <div style="text-align:center; margin-top:40px">
-        <button class="btn-outline" id="undoSwipeBtn"><i class="fas fa-undo"></i> Undo Swipe</button>
-      </div>
+      <button class="undo-float-btn" id="undoSwipeBtn">
+        <i class="fas fa-undo"></i> Undo Swipe
+      </button>
     </div>
     <div id="messages-page" class="hidden-page"><div class="section-title"><i class="fas fa-comments"></i> Conversations</div><div class="chat-list" id="chatList"></div><div id="chatDetail" style="display:none; margin-top:24px"><div id="activeChatName" style="font-weight:700; font-size:1.2rem; margin-bottom:12px"></div><div style="background:#f8f3ff; border-radius:28px; padding:16px; margin:12px 0; min-height:200px; max-height:400px; overflow-y:auto" id="chatMessagesArea"></div><div style="display:flex; gap:12px"><input type="text" id="messageInput" placeholder="Type your message..." style="flex:1; padding:14px 20px; border-radius:40px; border:2px solid #f0e8ff"><button class="btn-primary" id="sendMsgBtn">Send</button></div><button class="btn-outline" id="backToChatListBtn" style="margin-top:16px"><i class="fas fa-arrow-left"></i> Back to Conversations</button></div></div>
     <div id="community-page" class="hidden-page"><div class="section-title"><i class="fas fa-globe-asia"></i> Community Forum</div><div id="forumPosts"></div></div>
