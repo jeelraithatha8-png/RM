@@ -57,8 +57,20 @@ async def init_db():
                     local_db = loc
                     break
             
-            # Solid copy logic: only copy if target missing or invalid
+            # Solid copy logic: only copy if target missing, invalid, or using old schema lacking new columns
+            needs_copy = False
             if not os.path.exists(tmp_db) or os.path.getsize(tmp_db) == 0:
+                needs_copy = True
+            else:
+                try:
+                    with open(tmp_db, "rb") as f:
+                        if b"food_pref" not in f.read():
+                            needs_copy = True
+                            print("⚠️ Detected old DB schema in /tmp. Forcing overwrite.")
+                except Exception:
+                    needs_copy = True
+
+            if needs_copy:
                 if local_db and os.path.exists(local_db):
                     shutil.copy2(local_db, tmp_db)
                     print(f"📦 Successfully copied seed DB from {local_db} to {tmp_db} ({os.path.getsize(tmp_db)} bytes)")
