@@ -1,5 +1,5 @@
 """
-Hybrid Recommendation Engine for Nest & Found.
+Hybrid Recommendation Engine for Roommate Matching.
 
 Combines Rule-Based weighted scoring with ML Cosine Similarity
 to produce a compatibility score on a 1-10 scale.

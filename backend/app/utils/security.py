@@ -1,5 +1,5 @@
 """
-Security utilities for Nest & Found.
+Security utilities for Roommate Matching.
 Handles JWT token creation/verification, bcrypt password hashing,
 and OAuth2 bearer token extraction.
 """

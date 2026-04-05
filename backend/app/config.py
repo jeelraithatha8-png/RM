@@ -1,5 +1,5 @@
 """
-Configuration for Nest & Found Backend.
+Configuration for Roommate Matching Backend.
 
 Uses Pydantic Settings for environment-variable-based configuration
 with .env file support and sensible defaults.
@@ -17,7 +17,7 @@ def _default_db_url():
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Nest & Found Backend"
+    PROJECT_NAME: str = "Roommate Matching Backend"
     API_V1_STR: str = "/api/v1"
     
     # Security

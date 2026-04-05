@@ -1,5 +1,5 @@
 """
-Database seeder for Nest & Found.
+Database seeder for Roommate Matching.
 Creates mock users with preferences for local development and testing.
 Includes duplicate-email protection to safely re-run.
 """

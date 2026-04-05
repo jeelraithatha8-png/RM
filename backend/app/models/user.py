@@ -1,5 +1,5 @@
 """
-User and Preference models for Nest & Found.
+User and Preference models for Roommate Matching.
 """
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Float
 from sqlalchemy.orm import relationship

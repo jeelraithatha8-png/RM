@@ -1,5 +1,5 @@
 """
-Database module for Nest & Found.
+Database module for Roommate Matching.
 
 Configures the async SQLAlchemy engine, session factory, and Redis/mock cache.
 Supports SQLite (dev/Vercel) and PostgreSQL (Docker/production).

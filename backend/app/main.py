@@ -1,5 +1,5 @@
 """
-Nest & Found Backend — FastAPI Application Entry Point.
+Roommate Matching Backend — FastAPI Application Entry Point.
 
 A women-only roommate matching system with hybrid AI recommendation engine.
 This module initializes the FastAPI app, configures CORS, registers

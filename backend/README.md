@@ -1,6 +1,6 @@
-# Nest & Found Backend
+# Roommate Matching Backend
 
-This is the Python (FastAPI) backend for **Nest & Found**, a women-only roommate matching system. It features an advanced recommendation engine merging Rule-Based heuristics with Machine Learning `cosine_similarity`.
+This is the Python (FastAPI) backend for **Roommate Matching**, a women-only roommate matching system. It features an advanced recommendation engine merging Rule-Based heuristics with Machine Learning `cosine_similarity`.
 
 ## 📦 Tech Stack
 - **API Framework**: FastAPI

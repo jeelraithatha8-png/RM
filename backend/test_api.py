@@ -1,5 +1,5 @@
 """
-API Test Suite for Nest & Found Backend.
+API Test Suite for Roommate Matching Backend.
 Tests user registration, login, profile fetching, and match discovery.
 """
 import requests
@@ -10,7 +10,7 @@ BASE_URL = "http://localhost:8000/api/v1"
 
 
 def test_api():
-    print("🚀 Starting API Test Suite for Nest & Found...")
+    print("🚀 Starting API Test Suite for Roommate Matching...")
     
     # 1. Test User Registration
     print("\n--- 1. Registering Users ---")
