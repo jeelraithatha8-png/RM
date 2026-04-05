@@ -22,6 +22,53 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
+
+def _migrate_preferences_table(conn):
+    """
+    Safely add any missing columns to the preferences table.
+    SQLAlchemy's create_all() never alters existing tables — this ensures
+    columns added in new schema versions are applied even with old databases.
+    Works for both SQLite and PostgreSQL.
+    """
+    import sqlalchemy as sa
+    # Get existing columns in the preferences table
+    try:
+        result = conn.execute(sa.text("PRAGMA table_info(preferences)"))
+        existing_cols = {row[1] for row in result.fetchall()}
+    except Exception:
+        # PostgreSQL doesn't have PRAGMA — use information_schema
+        try:
+            result = conn.execute(sa.text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name='preferences'"
+            ))
+            existing_cols = {row[0] for row in result.fetchall()}
+        except Exception:
+            existing_cols = set()
+
+    # Map of all preference columns that must exist → their SQLite type
+    required_columns = {
+        "sleep_pref":      "VARCHAR(50)",
+        "sleep_sense":     "VARCHAR(50)",
+        "personality":     "VARCHAR(50)",
+        "living_habit":    "VARCHAR(50)",
+        "noise_tolerance": "VARCHAR(50)",
+        "guest_policy":    "VARCHAR(50)",
+        "food_pref":       "VARCHAR(50)",
+        "pet_friendly":    "VARCHAR(50)",
+        "smoking_habit":   "VARCHAR(50)",
+        "ac_usage":        "VARCHAR(50)",
+    }
+
+    for col, col_type in required_columns.items():
+        if col not in existing_cols:
+            try:
+                conn.execute(sa.text(f"ALTER TABLE preferences ADD COLUMN {col} {col_type}"))
+                print(f"✅ Migration: Added missing column '{col}' to preferences table.")
+            except Exception as e:
+                print(f"⚠️ Migration skipped for '{col}': {e}")
+
+
 async def init_db():
     """
     Initializes the database:
@@ -79,7 +126,9 @@ async def init_db():
 
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-            
+            # Run migrations to add any missing columns to existing tables
+            await conn.run_sync(_migrate_preferences_table)
+
         async with AsyncSessionLocal() as session:
             await seed_data(session)
         print("✅ Database initialized and synchronized.")

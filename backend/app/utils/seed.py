@@ -52,18 +52,14 @@ async def seed_data(db: AsyncSession):
 
         # 2. Seed other demo users for matching
         other_users = [
-            {
-                "name": "Arpita", "email": "arpita@example.com", "age": 27, "occupation": "Developer",
-                "prefs": {"sleep_pref": "Morning", "personality": "Introvert", "living_habit": "Flexible", "food_pref": "Non-Veg"}
-            },
-            {
-                "name": "Yaashi", "email": "yaashi@example.com", "age": 22, "occupation": "Student",
-                "prefs": {"sleep_pref": "Night", "personality": "Extrovert", "living_habit": "Mixed", "food_pref": "Vegetarian"}
-            },
-            {
-                "name": "Bhoomika", "email": "bhoomika@example.com", "age": 25, "occupation": "Designer",
-                "prefs": {"sleep_pref": "Evening", "personality": "Introvert", "living_habit": "Flexible", "food_pref": "Vegetarian"}
-            }
+            { "name": "Arpita", "email": "user1@example.com", "age": 27, "occupation": "Developer", "prefs": {"sleep_pref": "Morning", "sleep_sense": "Heavy Sleeper", "personality": "Introvert", "living_habit": "Flexible", "noise_tolerance": "Quiet", "guest_policy": "Occasional", "food_pref": "Non-Veg", "pet_friendly": "No Pets", "smoking_habit": "Non-Smoker", "ac_usage": "Always On"} },
+            { "name": "Yaashi", "email": "user2@example.com", "age": 22, "occupation": "Student", "prefs": {"sleep_pref": "Night", "sleep_sense": "Heavy Sleeper", "personality": "Extrovert", "living_habit": "Mixed", "noise_tolerance": "Noisy", "guest_policy": "Male Allowed", "food_pref": "Non-Veg", "pet_friendly": "Pet-Lover", "smoking_habit": "Smoker", "ac_usage": "Night Only"} },
+            { "name": "Bhoomika", "email": "user3@example.com", "age": 25, "occupation": "Designer", "prefs": {"sleep_pref": "Evening", "sleep_sense": "Light Sleeper", "personality": "Introvert", "living_habit": "Flexible", "noise_tolerance": "Quiet", "guest_policy": "Occasional", "food_pref": "Vegetarian", "pet_friendly": "Pet-Lover", "smoking_habit": "Non-Smoker", "ac_usage": "Eco-friendly"} },
+            { "name": "Jeel", "email": "user4@example.com", "age": 26, "occupation": "Chef", "prefs": {"sleep_pref": "Morning", "sleep_sense": "Heavy Sleeper", "personality": "Extrovert", "living_habit": "Organized", "noise_tolerance": "Noisy", "guest_policy": "Occasional", "food_pref": "Non-Veg", "pet_friendly": "No Pets", "smoking_habit": "Occasional", "ac_usage": "Always On"} },
+            { "name": "Aditi", "email": "user5@example.com", "age": 23, "occupation": "Content Creator", "prefs": {"sleep_pref": "Night", "sleep_sense": "Light Sleeper", "personality": "Extrovert", "living_habit": "Flexible", "noise_tolerance": "Noisy", "guest_policy": "Male Allowed", "food_pref": "Non-Veg", "pet_friendly": "Pet-Lover", "smoking_habit": "Smoker", "ac_usage": "Night Only"} },
+            { "name": "Sneha", "email": "user6@example.com", "age": 28, "occupation": "Lawyer", "prefs": {"sleep_pref": "Morning", "sleep_sense": "Light Sleeper", "personality": "Introvert", "living_habit": "Organized", "noise_tolerance": "Quiet", "guest_policy": "No Guests", "food_pref": "Vegetarian", "pet_friendly": "No Pets", "smoking_habit": "Non-Smoker", "ac_usage": "Eco-friendly"} },
+            { "name": "Kavya", "email": "user7@example.com", "age": 24, "occupation": "Engineer", "prefs": {"sleep_pref": "Evening", "sleep_sense": "Heavy Sleeper", "personality": "Ambivert", "living_habit": "Mixed", "noise_tolerance": "Quiet", "guest_policy": "Male Allowed", "food_pref": "Non-Veg", "pet_friendly": "Pet-Lover", "smoking_habit": "Occasional", "ac_usage": "Always On"} },
+            { "name": "Pallavi", "email": "user8@example.com", "age": 26, "occupation": "Marketing", "prefs": {"sleep_pref": "Morning", "sleep_sense": "Light Sleeper", "personality": "Extrovert", "living_habit": "Organized", "noise_tolerance": "Noisy", "guest_policy": "Occasional", "food_pref": "Vegetarian", "pet_friendly": "No Pets", "smoking_habit": "Non-Smoker", "ac_usage": "Eco-friendly"} },
         ]
 
         for u_data in other_users:
