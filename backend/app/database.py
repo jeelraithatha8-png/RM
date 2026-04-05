@@ -38,16 +38,32 @@ async def init_db():
     try:
         if os.environ.get("VERCEL"):
             tmp_db = "/tmp/nestfound.db"
-            # Locate relative to this file
-            local_db = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nestfound.db")
+            # Locate relative to this file — check both root and backend folder
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            backend_dir = os.path.dirname(current_dir)
+            root_dir = os.path.dirname(backend_dir)
+            
+            # Potential locations for the seed database
+            potential_locations = [
+                os.path.join(backend_dir, "nestfound.db"),
+                os.path.join(root_dir, "nestfound.db"),
+                os.path.join(os.getcwd(), "backend", "nestfound.db"),
+                os.path.join(os.getcwd(), "nestfound.db")
+            ]
+            
+            local_db = None
+            for loc in potential_locations:
+                if os.path.exists(loc) and os.path.getsize(loc) > 0:
+                    local_db = loc
+                    break
             
             # Solid copy logic: only copy if target missing or invalid
             if not os.path.exists(tmp_db) or os.path.getsize(tmp_db) == 0:
-                if os.path.exists(local_db):
+                if local_db and os.path.exists(local_db):
                     shutil.copy2(local_db, tmp_db)
-                    print(f"📦 Successfully copied seed DB to {tmp_db} ({os.path.getsize(tmp_db)} bytes)")
+                    print(f"📦 Successfully copied seed DB from {local_db} to {tmp_db} ({os.path.getsize(tmp_db)} bytes)")
                 else:
-                    print(f"⚠️ Seed DB not found at {local_db}, will create fresh.")
+                    print(f"⚠️ Seed DB not found (searched {potential_locations}), ensuring fresh metadata.")
 
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)

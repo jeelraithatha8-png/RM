@@ -402,11 +402,11 @@
     <div class="auth-form visible" id="formLogin">
       <div class="auth-field">
         <i class="fas fa-envelope"></i>
-        <input class="auth-input" type="email" id="loginEmail" placeholder="Email address" autocomplete="email">
+        <input class="auth-input" type="email" id="loginEmail" placeholder="Email address" autocomplete="email" value="user0@example.com">
       </div>
       <div class="auth-field">
         <i class="fas fa-lock"></i>
-        <input class="auth-input" type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
+        <input class="auth-input" type="password" id="loginPass" placeholder="Password" autocomplete="current-password" value="pass123">
       </div>
       <div class="auth-error" id="loginError"></div>
       <button class="auth-submit" id="loginBtn" onclick="performLogin()">Sign In to Dashboard</button>
@@ -493,7 +493,7 @@
   let currentCardIndex = 0;
   let matchesForSwipe = [];
   let currentFilter = null;
-  const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000/api/v1' : '/api/v1';
+  const API_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://localhost:8000/api/v1' : '/api/v1';
 
   const roommatesDataset = [
     { id:1, name:"Jyotasana", age:24, occupation:"Nurse", sleepPref:"Night", sleepSense:"Light Sleeper", personality:"Extrovert", livingHabit:"Organized", noiseTolerance:"Quiet", guestPolicy:"No Guests", verified:true, compatibilityScore:9.2 },

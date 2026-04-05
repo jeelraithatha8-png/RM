@@ -683,12 +683,12 @@
     
     <div class="form-group">
       <label><i class="fas fa-envelope"></i> Email Address</label>
-      <input type="email" id="authEmail" placeholder="you@domain.com" value="testuser@example.com">
+      <input type="email" id="authEmail" placeholder="you@domain.com" value="user0@example.com">
     </div>
     
     <div class="form-group">
       <label><i class="fas fa-key"></i> Password</label>
-      <input type="password" id="authPassword" placeholder="Minimum 6 characters" value="password123">
+      <input type="password" id="authPassword" placeholder="Minimum 6 characters" value="pass123">
     </div>
 
     <button class="btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center;">Sign In</button>
@@ -701,7 +701,7 @@
   // Nest & Found — Frontend Application Logic
   // ═══════════════════════════════════════════════
 
-  const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000/api/v1' : '/api/v1';
+  const API_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://localhost:8000/api/v1' : '/api/v1';
   let token = localStorage.getItem('nftoken');
   let currentFilter = null;
   let matchesData = [];
