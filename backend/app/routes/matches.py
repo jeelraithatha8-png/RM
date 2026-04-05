@@ -178,3 +178,26 @@ async def record_swipe(
             
     await db.commit()
     return {"status": "success", "mutual_match": mutual_match}
+
+
+@router.post("/swipe/undo")
+async def undo_swipe(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Remove the most recent swipe record for the current user."""
+    from sqlalchemy import desc
+    result = await db.execute(
+        select(Swipe).filter(Swipe.user_id == current_user.id)
+        .order_by(desc(Swipe.created_at)).limit(1)
+    )
+    last_swipe = result.scalars().first()
+    
+    if not last_swipe:
+        return {"status": "ignored", "message": "No swipes to undo"}
+        
+    target_id = last_swipe.target_id
+    await db.delete(last_swipe)
+    await db.commit()
+    
+    return {"status": "success", "undone_target_id": target_id}

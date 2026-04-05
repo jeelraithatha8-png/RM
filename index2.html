@@ -1096,7 +1096,15 @@
     grid.innerHTML = '';
     
     if (currentCardIndex >= matchesData.length) {
-      grid.innerHTML = '<div style="text-align:center; padding:100px"><i class="fas fa-heart fa-4x" style="color:var(--accent)"></i><h3>You\'ve reached the end!</h3><p class="text-muted">Check back later for more sisters.</p></div>';
+      grid.innerHTML = `
+        <div style="text-align:center; padding:100px">
+          <i class="fas fa-undo fa-4x" style="color:var(--accent); margin-bottom:20px"></i>
+          <h3>No more roommates in sight!</h3>
+          <p class="text-muted">You've swiped through everyone.</p>
+          <button class="btn-primary" id="resetDeckBtn" style="margin-top:20px">
+            <i class="fas fa-sync"></i> Refresh Deck
+          </button>
+        </div>`;
       return;
     }
 
@@ -1237,13 +1245,24 @@
   };
 
   async function undoSwipe() {
-    if (currentCardIndex > 0) {
-      currentCardIndex--;
-      renderSwipeStack();
-      showToast('⏪ Swiped back!');
-    } else {
-      showToast('No swipes to undo');
-    }
+    try {
+      const r = await fetch(`${API_URL}/matches/swipe/undo`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await r.json();
+      if (data.status === 'success') {
+        showToast('⏪ Last swipe undone persistently!');
+        fetchAndRenderMatches(); // Full refresh
+      } else {
+        showToast('No swipes to undo');
+      }
+    } catch (e) { showToast('Undo failed. Check connection.'); }
+  }
+
+  async function resetDeck() {
+    // This is essentially just re-fetching, but could eventually be an API to 'clear all passes'
+    fetchAndRenderMatches();
   }
 
 
@@ -1380,10 +1399,6 @@
     if (p === 'dashboard') { renderTopMatches(); attachChipListeners(); initDashboardButtons(); }
     if (p === 'matches') { 
       fetchAndRenderMatches();
-      // Wire floating undo button after injection
-      setTimeout(() => {
-        document.getElementById('undoSwipeBtn')?.addEventListener('click', undoSwipe);
-      }, 50);
     }
     if (p === 'messages') { renderChatList(); }
     if (p === 'community') renderCommunity();
@@ -1423,8 +1438,17 @@
     renderPage(btn.dataset.page);
   }));
 
-  // Back to chat list
-  document.getElementById('backToChatListBtn')?.addEventListener('click', () => renderChatList());
+  // Re-attach listeners for dynamic content or use event delegation
+  document.addEventListener('click', (e) => {
+    const undoBtn = e.target.closest('#undoSwipeBtn');
+    if (undoBtn) undoSwipe();
+    
+    // Back to chat list delegation
+    if (e.target.closest('#backToChatListBtn')) renderChatList();
+    
+    // Reset deck delegation
+    if (e.target.closest('#resetDeckBtn')) resetDeck();
+  });
 
   attachChipListeners();
 </script>
