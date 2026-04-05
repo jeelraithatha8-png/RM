@@ -666,6 +666,122 @@
       border-radius: 48px;
     }
 
+    /* Users Directory */
+    .users-search-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .users-search-bar input {
+      flex: 1;
+      padding: 14px 24px;
+      border-radius: 50px;
+      border: 2px solid #e5d9fc;
+      font-size: 0.95rem;
+      background: white;
+      transition: all 0.3s;
+    }
+    .users-search-bar input:focus {
+      border-color: #8b6ccf;
+      box-shadow: 0 0 0 4px rgba(108, 71, 194, 0.1);
+    }
+    .users-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .user-dir-card {
+      background: white;
+      border-radius: 28px;
+      padding: 24px;
+      border: 1px solid rgba(190, 160, 230, 0.25);
+      transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .user-dir-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #6c47c2, #b392e0, #e0d4ff);
+      transform: scaleX(0);
+      transition: transform 0.4s;
+    }
+    .user-dir-card:hover::before { transform: scaleX(1); }
+    .user-dir-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 48px rgba(108, 71, 194, 0.12);
+      border-color: #d9caff;
+    }
+    .user-dir-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .user-dir-avatar {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #e8defc, #d9caff);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #6c47c2;
+      flex-shrink: 0;
+    }
+    .user-dir-info h3 {
+      font-size: 1.1rem;
+      margin-bottom: 2px;
+    }
+    .user-dir-prefs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .user-dir-prefs .tag {
+      font-size: 0.68rem;
+      padding: 4px 10px;
+    }
+    .user-stats-bar {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .user-stat {
+      background: linear-gradient(135deg, #f5efff, #ede5ff);
+      padding: 14px 24px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #5e3c9e;
+    }
+    .user-stat i { font-size: 1.2rem; color: #8b6ccf; }
+    .user-stat .stat-num {
+      font-size: 1.4rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6c47c2, #b392e0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    body.dark-theme .user-dir-card {
+      background: #231c36;
+      border-color: rgba(255, 255, 255, 0.05);
+      color: #e2d9fc;
+    }
+    body.dark-theme .user-dir-card:hover { border-color: #6c47c2; }
+    body.dark-theme .user-dir-avatar { background: linear-gradient(135deg, #3c2f5a, #4c3773); }
+    body.dark-theme .user-stat { background: linear-gradient(135deg, #2a2240, #31264a); color: #d3c0ff; }
+    body.dark-theme .users-search-bar input { background: #1a1528; color: #fff; border-color: #493b6e; }
+
     @media (max-width: 768px) {
       .sidebar { width: 80px; }
       .content { padding: 20px; }
@@ -746,6 +862,7 @@
         <i class="fas fa-bolt"></i>
         <span>Swipe Deck</span>
       </div>
+      <button class="nav-item" data-page="users"><i class="fas fa-users"></i><span>Users</span></button>
       <button class="nav-item" data-page="messages"><i class="fas fa-comment-dots"></i><span>Chat</span></button>
       <button class="nav-item" data-page="community"><i class="fas fa-globe-asia"></i><span>Connect</span></button>
       <button class="nav-item" data-page="safety"><i class="fas fa-heart-shield"></i><span>Safety</span></button>
@@ -1400,6 +1517,7 @@
     if (p === 'matches') { 
       fetchAndRenderMatches();
     }
+    if (p === 'users') { renderUsersDirectory(); }
     if (p === 'messages') { renderChatList(); }
     if (p === 'community') renderCommunity();
     if (p === 'safety') initSafety();
@@ -1426,6 +1544,22 @@
         <i class="fas fa-undo"></i> Undo Swipe
       </button>
     </div>
+    <div id="users-page" class="hidden-page">
+      <div class="section-title"><i class="fas fa-users"></i> User Directory</div>
+      <div class="user-stats-bar" id="userStatsBar"></div>
+      <div class="users-search-bar">
+        <input type="text" id="userSearchInput" placeholder="🔍 Search by name or occupation...">
+        <button class="btn-primary" id="userSearchBtn"><i class="fas fa-search"></i> Search</button>
+      </div>
+      <div class="filter-chips" id="userFilterChips">
+        <span class="chip active" data-ufilter="all"><i class="fas fa-th"></i> All</span>
+        <span class="chip" data-ufilter="verified"><i class="fas fa-shield-alt"></i> Verified</span>
+        <span class="chip" data-ufilter="morning"><i class="fas fa-sun"></i> Morning Person</span>
+        <span class="chip" data-ufilter="night"><i class="fas fa-moon"></i> Night Owl</span>
+        <span class="chip" data-ufilter="quiet"><i class="fas fa-volume-mute"></i> Quiet</span>
+      </div>
+      <div class="users-grid" id="usersGrid"></div>
+    </div>
     <div id="messages-page" class="hidden-page"><div class="section-title"><i class="fas fa-comments"></i> Conversations</div><div class="chat-list" id="chatList"></div><div id="chatDetail" style="display:none; margin-top:24px"><div id="activeChatName" style="font-weight:700; font-size:1.2rem; margin-bottom:12px"></div><div style="background:#f8f3ff; border-radius:28px; padding:16px; margin:12px 0; min-height:200px; max-height:400px; overflow-y:auto" id="chatMessagesArea"></div><div style="display:flex; gap:12px"><input type="text" id="messageInput" placeholder="Type your message..." style="flex:1; padding:14px 20px; border-radius:40px; border:2px solid #f0e8ff"><button class="btn-primary" id="sendMsgBtn">Send</button></div><button class="btn-outline" id="backToChatListBtn" style="margin-top:16px"><i class="fas fa-arrow-left"></i> Back to Conversations</button></div></div>
     <div id="community-page" class="hidden-page"><div class="section-title"><i class="fas fa-globe-asia"></i> Community Forum</div><div id="forumPosts"></div></div>
     <div id="safety-page" class="hidden-page"><div class="section-title"><i class="fas fa-shield-alt"></i> Safety Center</div><div class="safety-card"><div style="display:flex; justify-content:space-between; margin-bottom:12px"><span><i class="fas fa-id-card"></i> Identity Verification</span><span style="color:#2c6e2c"><i class="fas fa-check-circle"></i> Verified</span></div><div style="display:flex; justify-content:space-between; margin-bottom:12px"><span><i class="fas fa-search"></i> Background Check</span><span class="text-muted">Optional upgrade</span></div><div style="display:flex; justify-content:space-between; margin-bottom:20px"><span><i class="fas fa-map-marker-alt"></i> Safe Check-In</span><span style="color:#2c6e2c"><i class="fas fa-check"></i> Active</span></div><hr><button class="btn-outline" id="anonymousAlertBtn" style="width:100%; margin:16px 0"><i class="fas fa-exclamation-triangle"></i> Emergency Alert</button><a id="downloadAgreementLink" href="#" style="display:inline-block; text-align:center; width:100%; padding:12px; background:#f5efff; border-radius:40px; text-decoration:none; color:#6c47c2; font-weight:600"><i class="fas fa-file-alt"></i> Download Roommate Agreement</a></div></div>
@@ -1451,6 +1585,122 @@
   });
 
   attachChipListeners();
+
+  // ═══ USERS DIRECTORY ═══
+  let allUsersData = [];
+  let activeUserFilter = 'all';
+
+  async function fetchAllUsers(search = '') {
+    try {
+      const url = search
+        ? `${API_URL}/users/all?search=${encodeURIComponent(search)}`
+        : `${API_URL}/users/all`;
+      const r = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!r.ok) return [];
+      allUsersData = await r.json();
+      return allUsersData;
+    } catch (e) { return []; }
+  }
+
+  function filterUsersLocally(users, filter) {
+    if (filter === 'all') return users;
+    return users.filter(u => {
+      const p = u.preference;
+      if (filter === 'verified') return u.verification_status;
+      if (filter === 'morning') return p && p.sleep_pref === 'Morning';
+      if (filter === 'night') return p && p.sleep_pref === 'Night';
+      if (filter === 'quiet') return p && p.noise_tolerance === 'Quiet';
+      return true;
+    });
+  }
+
+  function renderUsersGrid(users) {
+    const grid = document.getElementById('usersGrid');
+    if (!users.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+        <i class="fas fa-user-slash" style="font-size:2.5rem; color:#b392e0; margin-bottom:16px"></i>
+        <h3>No users found</h3>
+        <p class="text-muted">Try a different search or filter.</p>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = users.map(u => {
+      const p = u.preference;
+      const initials = (u.name || 'U').charAt(0).toUpperCase();
+      const isMe = u.id === curUser.id;
+      return `
+        <div class="user-dir-card">
+          <div class="user-dir-header">
+            <div class="user-dir-avatar">${initials}</div>
+            <div class="user-dir-info">
+              <h3>${escapeHTML(u.name)}${isMe ? ' <span style="font-size:0.7rem; color:#8b6ccf">(You)</span>' : ''}${u.verification_status ? ' <i class="fas fa-check-circle" style="color:#3c9e3c; font-size:0.85rem" title="Verified"></i>' : ''}</h3>
+              <div class="text-muted"><i class="fas fa-briefcase"></i> ${escapeHTML(u.occupation || 'Not specified')} ${u.age ? '· ' + u.age + ' yrs' : ''}</div>
+            </div>
+          </div>
+          <div class="user-dir-prefs">
+            ${p?.sleep_pref ? `<span class="tag"><i class="fas fa-moon"></i> ${p.sleep_pref}</span>` : ''}
+            ${p?.personality ? `<span class="tag"><i class="fas fa-smile"></i> ${p.personality}</span>` : ''}
+            ${p?.noise_tolerance ? `<span class="tag"><i class="fas fa-volume-down"></i> ${p.noise_tolerance}</span>` : ''}
+            ${p?.living_habit ? `<span class="tag"><i class="fas fa-home"></i> ${p.living_habit}</span>` : ''}
+            ${p?.guest_policy ? `<span class="tag"><i class="fas fa-user-friends"></i> ${p.guest_policy}</span>` : ''}
+            ${p?.food_pref ? `<span class="tag"><i class="fas fa-utensils"></i> ${p.food_pref}</span>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderUserStats(users) {
+    const total = users.length;
+    const verified = users.filter(u => u.verification_status).length;
+    const morning = users.filter(u => u.preference?.sleep_pref === 'Morning').length;
+    document.getElementById('userStatsBar').innerHTML = `
+      <div class="user-stat"><i class="fas fa-users"></i> <span class="stat-num">${total}</span> Total Users</div>
+      <div class="user-stat"><i class="fas fa-shield-alt"></i> <span class="stat-num">${verified}</span> Verified</div>
+      <div class="user-stat"><i class="fas fa-sun"></i> <span class="stat-num">${morning}</span> Early Birds</div>
+    `;
+  }
+
+  async function renderUsersDirectory() {
+    const grid = document.getElementById('usersGrid');
+    grid.innerHTML = `<div style="text-align:center; padding:60px; grid-column:1/-1"><i class="fas fa-spinner fa-spin fa-2x" style="color:#8b6ccf"></i><p class="text-muted" style="margin-top:12px">Loading users...</p></div>`;
+    
+    const users = await fetchAllUsers();
+    renderUserStats(users);
+    const filtered = filterUsersLocally(users, activeUserFilter);
+    renderUsersGrid(filtered);
+    attachUserFilterListeners();
+    attachUserSearchListeners();
+  }
+
+  function attachUserFilterListeners() {
+    document.querySelectorAll('[data-ufilter]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('[data-ufilter]').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeUserFilter = chip.dataset.ufilter;
+        const filtered = filterUsersLocally(allUsersData, activeUserFilter);
+        renderUsersGrid(filtered);
+      });
+    });
+  }
+
+  function attachUserSearchListeners() {
+    const searchInput = document.getElementById('userSearchInput');
+    const searchBtn = document.getElementById('userSearchBtn');
+    
+    const doSearch = async () => {
+      const q = searchInput.value.trim();
+      const users = await fetchAllUsers(q);
+      renderUserStats(users);
+      const filtered = filterUsersLocally(users, activeUserFilter);
+      renderUsersGrid(filtered);
+    };
+    
+    searchBtn?.addEventListener('click', doSearch);
+    searchInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doSearch();
+    });
+  }
 </script>
 </body>
 </html>
