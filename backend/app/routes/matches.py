@@ -10,6 +10,11 @@ from sqlalchemy.orm import selectinload
 from typing import Optional
 from fastapi.encoders import jsonable_encoder
 import json
+import os
+import joblib
+import pandas as pd
+from sklearn.metrics.pairwise import cosine_similarity
+from pydantic import BaseModel
 
 from app.database import get_db, get_redis
 from app.models.user import User, Preference
@@ -201,3 +206,74 @@ async def undo_swipe(
     await db.commit()
     
     return {"status": "success", "undone_target_id": target_id}
+
+# --- ML Match Route --- #
+# Load ML Models globally
+MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "ml_models")
+try:
+    preprocessor = joblib.load(os.path.join(MODEL_DIR, "preprocessor.pkl"))
+    feature_vectors = joblib.load(os.path.join(MODEL_DIR, "feature_vectors.pkl"))
+    dataset = joblib.load(os.path.join(MODEL_DIR, "dataset.pkl"))
+except Exception as e:
+    print(f"Warning: Failed to load ML models: {e}")
+    preprocessor, feature_vectors, dataset = None, None, None
+
+class MLMatchRequest(BaseModel):
+    occupation: str = "Student"
+    sleepPreference: str = "Morning"
+    sleepSensitivity: str = "Normal Sleeper"
+    livingHabits: str = "Moderate"
+    noiseTolerance: str = "Moderate"
+    socialEnergy: int = 3
+    personality: str = "Ambivert"
+    room_type_preference: str = "Shared Room"
+    pets: str = "No Pets"
+    smoking_drinking: str = "Non-Smoker/Non-Drinker"
+    dietary_restrictions: str = "No Restrictions"
+
+@router.post("/ml-match")
+async def ml_match(request: MLMatchRequest):
+    """Fallback ML endpoint that uses pure scikit-learn models matching CSV dataset strings."""
+    if preprocessor is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail="ML models not loaded")
+    
+    try:
+        user_profile = {
+            'profession': request.occupation,
+            'work_shift': request.sleepPreference,
+            'sleep_type': request.sleepSensitivity,
+            'cleanliness': request.livingHabits,
+            'noise_preference': request.noiseTolerance,
+            'social_energy_rating': request.socialEnergy,
+            
+            'personality': request.personality,
+            'room_type_preference': request.room_type_preference,
+            'pets': request.pets,
+            'smoking_drinking': request.smoking_drinking,
+            'dietary_restrictions': request.dietary_restrictions
+        }
+        
+        user_df = pd.DataFrame([user_profile])
+        user_vector = preprocessor.transform(user_df)
+        scores = cosine_similarity(user_vector, feature_vectors).flatten()
+        
+        best_indices = scores.argsort()[-5:][::-1]
+        matches = []
+        for idx in best_indices:
+            match_row = dataset.iloc[idx]
+            match_score = float(scores[idx] * 100)
+            
+            matches.append({
+                "id": str(idx),
+                "name": match_row.get('user_name', 'Anonymous User'),
+                "profession": match_row.get('profession', 'Unknown'),
+                "match_score": round(match_score, 1),
+                "work_shift": match_row.get('work_shift', ''),
+                "cleanliness": match_row.get('cleanliness', ''),
+            })
+            
+        return {"matches": matches}
+    except ValueError as ve:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=str(ve))
