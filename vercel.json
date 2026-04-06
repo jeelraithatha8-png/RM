@@ -4,11 +4,22 @@
     {
       "src": "backend/app/main.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "15mb" }
+      "config": {"maxLambdaSize": "15mb"}
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
     }
   ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/backend/app/main.py" }
-  ],
-  "outputDirectory": "."
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/app/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "index2.html"
+    }
+  ]
 }
+
