@@ -69,10 +69,15 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"message": "Internal Server Error", "detail": str(exc), "traceback": traceback.format_exc()}
     )
 
+from fastapi.middleware.cors import CORSMiddleware
+import logging
+
+# Enable debug logging
+logging.basicConfig(level=logging.DEBUG)
 # CORS — allow all origins for local dev
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "https://rm-roan.vercel.app"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
