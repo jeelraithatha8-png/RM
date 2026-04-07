@@ -1,114 +1,41 @@
-"""
-Roommate Matching Backend — FastAPI Application Entry Point.
-
-A women-only roommate matching system with hybrid AI recommendation engine.
-This module initializes the FastAPI app, configures CORS, registers
-all route modules, and manages the database lifecycle.
-"""
-import sys
-import os
-
-# Ensure 'backend/' is on sys.path for Vercel serverless deployment
-_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _backend_dir not in sys.path:
-    sys.path.insert(0, _backend_dir)
-
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.config import settings
-from app.database import engine, init_db
-from app.models.base import Base
-
-# Routers
-from app.routes.auth import router as auth_router
-from app.routes.users import router as user_router
-from app.routes.matches import router as match_router
-from app.routes.chat import router as chat_router
-from app.routes.safety import router as safety_router
-
-from app.database import AsyncSessionLocal
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Application lifecycle manager.
-    Handles database initialization and cleanup.
-    """
-    await init_db()
-    yield
-    await engine.dispose()
-
-
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version="1.0.0",
-    description=(
-        "Backend API for **Roommate Matching System**: A Women-Only Personalized Living Platform.\n\n"
-        "Features:\n"
-        "- 🤖 Hybrid Rule-Based + ML (Cosine Similarity) matching engine\n"
-        "- 🔐 JWT authentication with bcrypt password hashing\n"
-        "- 🛡️ Safety reporting and identity verification\n"
-        "- 💬 Real-time messaging between matched users\n"
-    ),
-    lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
-
-from fastapi.responses import JSONResponse
-from fastapi import Request
-import traceback
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    return JSONResponse(
-        status_code=500,
-        content={"message": "Internal Server Error", "detail": str(exc), "traceback": traceback.format_exc()}
-    )
-
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
+from app.routes import auth, users, matches
+from app.database import engine, Base
 import logging
 
-# Enable debug logging
-logging.basicConfig(level=logging.DEBUG)
-# CORS — allow all origins for local dev
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Roommate Matching API", version="1.0.0")
+
+# CORS configuration - Allow all origins for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://rm-roan.vercel.app"],
-    allow_credentials=False,
+    allow_origins=["*"],  # For development only
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Register route modules
-app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["Auth"])
-app.include_router(user_router, prefix=f"{settings.API_V1_STR}/users", tags=["Users"])
-app.include_router(match_router, prefix=f"{settings.API_V1_STR}/matches", tags=["Matches"])
-app.include_router(chat_router, prefix=f"{settings.API_V1_STR}/chat", tags=["Chat"])
-app.include_router(safety_router, prefix=f"{settings.API_V1_STR}/safety", tags=["Safety"])
+# Include routers
+app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
+app.include_router(users.router, prefix="/api/users", tags=["users"])
+app.include_router(matches.router, prefix="/api/matches", tags=["matches"])
 
+@app.get("/")
+async def root():
+    return {"message": "Roommate Matching API is running", "status": "active"}
 
-@app.get("/", tags=["Health"])
-def read_root():
-    """Root endpoint — API health check."""
-    return {
-        "status": "healthy",
-        "project": settings.PROJECT_NAME,
-        "version": "1.0.0",
-        "docs": "/docs",
-    }
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy", "database": "connected"}
 
-
-@app.get("/health", tags=["Health"])
-def health_check():
-    """Health check endpoint for monitoring and deployment verification."""
-    return {"status": "ok"}
-
-
-@app.get(f"{settings.API_V1_STR}/health", tags=["Health"])
-def api_health_check():
-    """API-prefixed health check to match frontend expectations."""
-    return {"status": "ok", "version": "1.0.0"}
+# Create tables on startup
+@app.on_event("startup")
+async def startup_event():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database tables created successfully")
