@@ -1,25 +1,22 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "backend/app/main.py",
-      "use": "@vercel/python",
-      "config": {"maxLambdaSize": "15mb"}
-    },
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.9"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "backend/app/main.py"
+      "dest": "/api/index.py"
     },
     {
       "src": "/(.*)",
-      "dest": "index2.html"
+      "dest": "/complete_index.html"
     }
-  ]
+  ],
+  "env": {
+    "DATABASE_URL": "sqlite+aiosqlite:////tmp/roommate.db",
+    "SECRET_KEY": "your-production-secret-key-change-this",
+    "ALGORITHM": "HS256"
+  }
 }
-
