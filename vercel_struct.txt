@@ -1,0 +1,18 @@
+RM/
+├── api/
+│   └── index.py          # Vercel serverless function
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── auth.py
+│   │   ├── models.py
+│   │   ├── database.py
+│   │   └── routes/
+│   │       ├── __init__.py
+│   │       └── auth.py
+│   └── requirements.txt
+├── complete_index.html    # Main login page
+├── dashboard.html         # Dashboard page
+├── vercel.json           # Vercel config
+└── requirements.txt      # Root requirements (for Vercel)
