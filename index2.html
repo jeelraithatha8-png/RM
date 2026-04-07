@@ -921,7 +921,7 @@
   // Roommate Matching — Frontend Application Logic
   // ═══════════════════════════════════════════════
 
-  const API_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://localhost:8000/api/v1' : '/api/v1';
+  const API_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'https://roommatematching.vercel.app/';
   let token = localStorage.getItem('nftoken');
   let currentFilter = null;
   let matchesData = [];
@@ -1703,4 +1703,4 @@
   }
 </script>
 </body>
-</html>
+</html>
