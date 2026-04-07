@@ -1025,32 +1025,58 @@
     authStatus.style.color = '#6c47c2';
     authStatus.innerText = '⏳ Processing...';
 
+    // Replace the existing login function
+async function handleLogin(email, password) {
     try {
-      if (isRegistering) {
-        const res = await fetch(`${API_URL}/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email, password, name, age: 24, occupation: 'Professional',
-            preferences: {
-              sleep_pref: "Night", sleep_sense: "Light Sleeper",
-              personality: "Ambivert", living_habit: "Flexible",
-              noise_tolerance: "Moderate", guest_policy: "Occasional"
-            }
-          })
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password })
         });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          authStatus.style.color = '#e65b65';
-          authStatus.innerText = `❌ ${err.detail || 'Registration failed. Email may already exist.'}`;
-          return;
+        
+        // Handle response
+        if (!response.ok) {
+            const error = await response.json();
+            console.error('Login failed:', error);
+            
+            // Show user-friendly error message
+            const errorMsg = document.getElementById('error-message');
+            if (errorMsg) {
+                errorMsg.textContent = error.detail || 'Invalid email or password';
+                errorMsg.style.display = 'block';
+            }
+            return false;
         }
-        authStatus.style.color = '#2c6e2c';
-        authStatus.innerText = '✅ Registered! Logging in...';
-        isRegistering = false;
-      }
+        
+        const data = await response.json();
+        localStorage.setItem('access_token', data.access_token);
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard.html';
+        return true;
+        
+    } catch (error) {
+        console.error('Network error:', error);
+        const errorMsg = document.getElementById('error-message');
+        if (errorMsg) {
+            errorMsg.textContent = 'Network error. Please try again.';
+            errorMsg.style.display = 'block';
+        }
+        return false;
+    }
+}
 
-      // Login flow
+// Add form submit handler
+document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    await handleLogin(email, password);
+});
+
+         // Login flow
       const fd = new URLSearchParams();
       fd.append('username', email);
       fd.append('password', password);
